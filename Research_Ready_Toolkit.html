@@ -3156,19 +3156,10 @@
               homeIntro.appendChild(homeHelper);
             }
 
-            var homeNote = document.createElement("p");
-            homeNote.className = "screen-note";
-            homeNote.textContent = "Review the barriers, identify actions, and take away a clear summary.";
-            homeIntro.appendChild(homeNote);
             renderActionLikeNode({
               next: "start_question",
               nextLabel: "Start review"
             }, homeIntro);
-
-            var homeHint = document.createElement("p");
-            homeHint.className = "home-hint";
-            homeHint.textContent = "No sign-in needed · Works offline";
-            homeIntro.appendChild(homeHint);
 
             homePanel.appendChild(homeIntro);
 
