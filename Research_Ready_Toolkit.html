@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Back on Track Toolkit · Refined</title>
+    <title>Back on Track Toolkit</title>
     <style>
       /* Shared colors, spacing, typography, and surface tokens. */
       :root {
@@ -461,8 +461,9 @@
         background: #faf7f0;
       }
 
-      .success-panel {
-        border-left-color: #7a947c;
+      .recommendation-panel.success-panel {
+        border: 0;
+        border-radius: 0;
         background: #f1f5ef;
       }
 
@@ -1224,7 +1225,7 @@
       .journey-tools .button {
         font-size: 0.78rem;
         padding: 0.55rem 0.7rem;
-        min-height: 2.4rem;
+        min-height: 44px;
         flex: 1;
       }
 
@@ -1457,6 +1458,18 @@
         }
 
       }
+      .draft-status {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin: 0 auto 1rem;
+        max-width: 1120px;
+      }
+      .draft-status:empty { display: none; }
+      .summary-panel-header .button { width: auto; flex: 0 0 auto; min-height: 44px; }
+      .summary-details > summary { cursor: pointer; padding: 0.75rem 0; font-weight: 600; }
+      .summary-details .summary-block { margin-top: 1rem; }
+      .review-expectations { font-size: 1rem; }
     </style>
   </head>
   <body data-sidebar-open="false">
@@ -1465,7 +1478,6 @@
       <header class="masthead">
         <div class="masthead-bar">
           <div class="masthead-copy">
-            <p class="eyebrow">Research Ready Toolkit</p>
             <h1>Back on Track Toolkit</h1>
           </div>
 
@@ -1515,6 +1527,8 @@
         </p>
       </div>
 
+      <p id="draft-status" class="draft-status" role="status"></p>
+
       <div class="workspace">
         <!-- JavaScript renders the current question, recommendation, or summary here. -->
         <main
@@ -1563,7 +1577,7 @@
           <div class="journey-tools" aria-label="Export your progress">
             <button id="copy-progress" class="button button-secondary" type="button" data-copy-summary>Copy summary</button>
             <button id="download-progress" class="button button-secondary" type="button">Download CSV</button>
-            <p class="journey-note">Your progress stays in this tab. Download a copy before closing.</p>
+            <p class="journey-note">Your review saves automatically on this device when browser storage is available. Download a copy to share it.</p>
             <p id="copy-status" class="journey-note" role="status"></p>
           </div>
         </aside>
@@ -1663,7 +1677,8 @@
             type: "action",
             section: "Start",
             title: "Toolkit overview",
-            text: "Work through each section to determine why the study is failing. You can see a summary of suggested actions at the end of the toolkit.",
+            instructional: true,
+            text: "Work through the sections to identify barriers affecting recruitment. You can review the recommended actions at the end.",
             next: "monitoring_tools"
           },
 
@@ -1674,7 +1689,7 @@
             section: "Monitoring Recruitment",
             title: "Monitoring Recruitment",
             text: "Do you have the right tools, access and training to monitor recruitment?",
-            helperText: "Examples: EDGE, ODP, effective screening log.",
+            helperText: "Use your study management system, recruitment dashboard or an up-to-date screening log. Check that your team can access the figures and understands how to use them.",
             options: [
               { label: "Yes", next: "escalation_issues" },
               { label: "No", next: "monitoring_action" }
@@ -1728,7 +1743,8 @@
             type: "action",
             section: "Escalation",
             title: "Escalation",
-            text: "Escalate to the appropriate people or teams. This may include the Principal Investigator, Team Lead, R&D, RRDN, Sponsor, or other relevant stakeholders.",
+            text: "Escalate to the appropriate people or teams. This may include the Principal Investigator, Team Lead, Research and Development (R&D), Regional Research Delivery Network (RRDN), Sponsor, or other relevant stakeholders.",
+            helperText: "Use your local escalation route to agree who will coordinate the response and what happens next.",
             next: "escalation_barriers"
           },
           escalation_barriers: {
@@ -2352,7 +2368,7 @@
             type: "question",
             section: "Patient Pathway",
             title: "Patient Pathway",
-            text: "Have you involved participants, PPIE, the public and/or patient groups in trying to understand why the study is failing?",
+            text: "Have you involved participants, PPIE, the public and/or patient groups in trying to understand the barriers affecting recruitment?",
             options: [
               { label: "Yes", next: "patient_pathway_new_ideas" },
               { label: "No", next: "patient_pathway_involve_action" }
@@ -2440,7 +2456,7 @@
             type: "summary",
             section: "Completion Summary",
             title: "Completion Summary",
-            text: "Congratulations. You have completed all sections in this toolkit. If there are any areas not covered within the toolkit, please escalate to your Team Lead."
+            text: "Review the recommended actions with your team. Escalate any areas not covered to your Team Lead."
           }
         }
       };
@@ -2452,7 +2468,7 @@
         var nodes = data.nodes || {};
         var orderedSections = data.sections || [];
 
-        // Journey data lives in memory for this tab; history contains snapshots for Back.
+        // Keep Back snapshots with a versioned, resumable draft on this device.
         var state = {
           currentNodeId: "welcome",
           history: [],
@@ -2461,6 +2477,56 @@
           outcome: "in_progress",
           sidebarOpen: false
         };
+
+        var draftKey = "back-on-track-review-v1";
+        var pendingDraft = null;
+        var storageAvailable = true;
+        var draftMessage = "";
+        try {
+          var stored = localStorage.getItem(draftKey);
+          if (stored) {
+            var candidate = JSON.parse(stored);
+            if (candidate.version !== 1 || !validSnapshot(candidate.state) ||
+                !Array.isArray(candidate.history) || !candidate.history.every(validSnapshot)) {
+              throw new Error("Invalid draft");
+            }
+            pendingDraft = candidate;
+          }
+        } catch (error) {
+          draftMessage = "Saved reviews are unavailable or a draft could not be opened. You can start a new review or use your downloaded copy.";
+        }
+
+        function validSnapshot(value) {
+          return !!value && !!nodes[value.currentNodeId] && value.answers &&
+            typeof value.answers === "object" && Array.isArray(value.log) &&
+            value.log.every(function (entry) {
+              return entry && typeof entry.section === "string" &&
+                typeof entry.question === "string" && typeof entry.answer === "string" &&
+                typeof entry.action === "string" && !!nodes[entry.resultingNodeId];
+            }) && ["in_progress", "early_exit", "on_track", "completed"].indexOf(value.outcome) !== -1;
+        }
+
+        function saveDraft() {
+          if (state.currentNodeId === "welcome") { return; }
+          try {
+            localStorage.setItem(draftKey, JSON.stringify({
+              version: 1, state: captureSnapshot(), history: state.history
+            }));
+            storageAvailable = true;
+            draftMessage = "Review saved on this device. You can close this page and resume later.";
+          } catch (error) {
+            storageAvailable = false;
+            draftMessage = "Review could not be saved. Keep this page open and download a copy before refreshing or leaving.";
+          }
+        }
+
+        function resumeDraft() {
+          if (!pendingDraft) { return; }
+          restoreSnapshot(pendingDraft.state);
+          state.history = pendingDraft.history;
+          pendingDraft = null;
+          render();
+        }
 
         // Cache the static page controls used when rendering and opening the sidebar.
         var appRoot = document.getElementById("app");
@@ -2539,7 +2605,7 @@
           return {
             resultingNodeId: nextNode.id,
             resultingAction:
-              nextNode.type === "action" || nextNode.type === "exit" ? nextNode.text : ""
+              !nextNode.instructional && (nextNode.type === "action" || nextNode.type === "exit") ? nextNode.text : ""
           };
         }
 
@@ -2651,13 +2717,16 @@
         // Confirm before clearing recorded answers, then return to the welcome screen.
         function restart() {
           if (
-            state.log.length &&
+            (state.log.length || pendingDraft) &&
             !window.confirm(
               "Start a new review? Your current answers will be cleared. Download your progress first if you need a copy."
             )
           ) {
             return;
           }
+          try { localStorage.removeItem(draftKey); } catch (error) {}
+          pendingDraft = null;
+          draftMessage = "";
           state.currentNodeId = "welcome";
           state.history = [];
           state.answers = {};
@@ -2693,6 +2762,11 @@
           lines.push("");
           lines.push("Sections visited: " + (sectionsVisited.join(", ") || "None"));
           lines.push("");
+          if (actions.length) {
+            lines.push("Recommended actions");
+            Array.prototype.push.apply(lines, actions.filter(function (item, index) { return actions.indexOf(item) === index; }));
+            lines.push("");
+          }
           lines.push("Journey");
 
           if (!state.log.length) {
@@ -2711,16 +2785,12 @@
             lines.push("   Next step: " + entry.resultingNodeId);
           });
 
-          if (actions.length) {
-            lines.push("");
-            lines.push("Recommended actions");
-            Array.prototype.push.apply(lines, actions);
-          }
-
           return lines.join("\n");
         }
 
         function updateCopyButtonLabel(label) {
+          var summaryFeedback = document.getElementById("summary-copy-status");
+          if (summaryFeedback) { summaryFeedback.textContent = label === "Copied" ? "Summary copied to clipboard." : label; }
           document.getElementById("copy-status").textContent = label === "Copied"
             ? "Summary copied to clipboard."
             : label;
@@ -2746,7 +2816,7 @@
                 updateCopyButtonLabel("Copy unavailable. Download a CSV instead.");
               }
             } catch (error) {
-              window.alert("Unable to copy the summary to the clipboard.");
+              updateCopyButtonLabel("Copy unavailable. Download a CSV instead.");
             }
 
             document.body.removeChild(textarea);
@@ -2917,17 +2987,13 @@
           var summaryScreen = document.createElement("div");
           summaryScreen.className = "summary-screen";
 
-          var banner = document.createElement("section");
-          banner.className = "summary-outcome-banner";
-          banner.innerHTML =
-            "<p class=\"eyebrow\">Completion report</p><p>" +
-            getOutcomeLabel() +
-            "</p>";
-          summaryScreen.appendChild(banner);
-
           var text = document.createElement("p");
           text.className = "summary-screen-copy";
-          text.textContent = node.text;
+          text.textContent = state.outcome === "early_exit"
+            ? "This review stopped early because escalation or further action is needed. The remaining sections have not been completed. Agree next steps with the people named in the recommendation below."
+            : state.outcome === "on_track"
+              ? "Your answer indicates that the study is meeting recruitment milestones. Continue monitoring performance and return to the toolkit if barriers arise. The remaining sections were not reviewed."
+              : "You have reached the end of the toolkit. Review the actions below with your team. Escalate any areas not covered to your Team Lead.";
           summaryScreen.appendChild(text);
 
           var uniqueSections = [];
@@ -2946,23 +3012,31 @@
             }
           });
 
-          var summaryGrid = document.createElement("div");
-          summaryGrid.className = "summary-grid";
-          summaryGrid.appendChild(
-            createSummaryBlock("Sections visited", uniqueSections, "No sections visited.")
-          );
-          summaryGrid.appendChild(
-            createSummaryBlock("Questions answered", questionItems, "No questions answered.")
-          );
-          summaryGrid.appendChild(
-            createSummaryBlock(
-              "Actions recommended",
-              actionItems,
-              "No specific actions were triggered in this pathway."
-            )
-          );
+          summaryScreen.appendChild(createSummaryBlock(
+            "Recommended actions", actionItems.filter(function (item, index) {
+              return actionItems.indexOf(item) === index;
+            }), "No specific actions were triggered. Continue monitoring recruitment performance."
+          ));
 
-          summaryScreen.appendChild(summaryGrid);
+          var exports = document.createElement("div");
+          exports.className = "option-grid";
+          exports.appendChild(createButton({ label: "Copy summary", onClick: copySummary }));
+          exports.appendChild(createButton({ label: "Download CSV", secondary: true, onClick: downloadCsv }));
+          summaryScreen.appendChild(exports);
+          var copyFeedback = document.createElement("p");
+          copyFeedback.id = "summary-copy-status";
+          copyFeedback.className = "journey-note";
+          copyFeedback.setAttribute("role", "status");
+          summaryScreen.appendChild(copyFeedback);
+
+          var details = document.createElement("details");
+          details.className = "summary-details";
+          var detailTitle = document.createElement("summary");
+          detailTitle.textContent = "View answer history (" + state.log.length + " answers)";
+          details.appendChild(detailTitle);
+          details.appendChild(createSummaryBlock("Sections visited", uniqueSections, "No sections visited."));
+          details.appendChild(createSummaryBlock("Questions answered", questionItems, "No questions answered."));
+          summaryScreen.appendChild(details);
           container.appendChild(summaryScreen);
         }
 
@@ -3008,22 +3082,6 @@
           if (state.history.length) {
             var backButton = createButton({ label: "Back", secondary: true, onClick: goBack });
             footer.insertBefore(backButton, footer.firstChild);
-          }
-
-          if (node.type === "summary") {
-            footer.appendChild(
-              createButton({
-                label: "Copy summary",
-                onClick: copySummary
-              })
-            );
-            footer.appendChild(
-              createButton({
-                label: "Download CSV",
-                secondary: true,
-                onClick: downloadCsv
-              })
-            );
           }
 
           container.appendChild(footer);
@@ -3101,7 +3159,7 @@
 
             var section = document.createElement("span");
             section.className = "meta-pill";
-            section.textContent = node.type === "summary" ? "Review complete" : node.section;
+            section.textContent = node.type === "summary" ? "Review summary" : node.section;
             meta.appendChild(section);
 
             shell.appendChild(meta);
@@ -3129,7 +3187,9 @@
             summaryLead.className = "summary-panel-block";
             var summaryQuestion = document.createElement("h2");
             summaryQuestion.className = "screen-question";
-            summaryQuestion.textContent = "Your toolkit journey is complete.";
+            summaryQuestion.textContent = state.outcome === "early_exit" ? "Escalation needed before continuing."
+              : state.outcome === "on_track" ? "The study is currently on track."
+              : "Your review is complete.";
             summaryLead.appendChild(summaryQuestion);
             contentStack.appendChild(summaryLead);
           } else if (node.layout === "home") {
@@ -3156,10 +3216,23 @@
               homeIntro.appendChild(homeHelper);
             }
 
-            renderActionLikeNode({
-              next: "start_question",
-              nextLabel: "Start review"
-            }, homeIntro);
+            var expectations = document.createElement("p");
+            expectations.className = "home-description review-expectations";
+            expectations.textContent = "Review up to 12 areas of study delivery, one question at a time. Some pathways end earlier with a recommended next step. Have your recruitment figures and screening log ready.";
+            homeIntro.appendChild(expectations);
+            var saveNote = document.createElement("p");
+            saveNote.className = "screen-helper";
+            saveNote.textContent = "Your review saves automatically in this browser on this device when storage is available. Return here to resume; Start over clears the saved review.";
+            homeIntro.appendChild(saveNote);
+            if (pendingDraft) {
+              var resumeActions = document.createElement("div");
+              resumeActions.className = "option-grid";
+              resumeActions.appendChild(createButton({ label: "Resume review", onClick: resumeDraft }));
+              resumeActions.appendChild(createButton({ label: "Start over", secondary: true, onClick: restart }));
+              homeIntro.appendChild(resumeActions);
+            } else {
+              renderActionLikeNode({ next: "start_question", nextLabel: "Start review" }, homeIntro);
+            }
 
             homePanel.appendChild(homeIntro);
 
@@ -3199,7 +3272,7 @@
 
             contentStack.appendChild(homePanel);
           } else {
-            var isRecommendation = node.type === "action" || node.type === "exit";
+            var isRecommendation = !node.instructional && (node.type === "action" || node.type === "exit");
             var isPositiveExit = node.type === "exit" && node.outcome === "on_track";
             var contentPanel = document.createElement("div");
             if (isPositiveExit) {
@@ -3218,7 +3291,7 @@
               contentTag.className = isRecommendation
                 ? "content-tag recommendation-tag"
                 : "content-tag question-tag";
-              contentTag.textContent = isRecommendation ? "Recommendation" : "Question";
+              contentTag.textContent = node.instructional ? "Overview" : isRecommendation ? "Recommendation" : "Question";
             }
             contentPanel.appendChild(contentTag);
 
@@ -3234,6 +3307,22 @@
               contentPanel.appendChild(helper);
             }
 
+            var terms = {
+              "R&D": "Research and Development",
+              "RRDN": "Regional Research Delivery Network",
+              "PI": "Principal Investigator",
+              "PPIE": "Patient and Public Involvement and Engagement"
+            };
+            var definitions = Object.keys(terms).filter(function (term) {
+              return new RegExp("\\b" + term + "\\b").test(node.text) && node.text.indexOf(terms[term]) === -1;
+            });
+            if (definitions.length) {
+              var terminology = document.createElement("p");
+              terminology.className = "screen-helper";
+              terminology.textContent = definitions.map(function (term) { return term + ": " + terms[term]; }).join(". ") + ".";
+              contentPanel.appendChild(terminology);
+            }
+
             if (node.type === "section_start") {
               var startNote = document.createElement("p");
               startNote.className = "screen-note";
@@ -3241,7 +3330,7 @@
               contentPanel.appendChild(startNote);
             }
 
-            if (node.type === "action") {
+            if (node.type === "action" && !node.instructional) {
               var note = document.createElement("p");
               note.className = "screen-note";
               note.textContent = "Review the action above, then continue when you are ready.";
@@ -3275,6 +3364,8 @@
           shell.appendChild(screenCard);
           appRoot.appendChild(shell);
           renderHistoryPanel();
+          saveDraft();
+          document.getElementById("draft-status").textContent = draftMessage || (pendingDraft ? "A saved review is ready to resume on this device." : "");
           syncShellState();
           document.getElementById("copy-progress").disabled = !state.log.length;
           document.getElementById("download-progress").disabled = !state.log.length;
@@ -3324,6 +3415,13 @@
         sidebarBackdrop.addEventListener("click", closeSidebar);
         window.addEventListener("scroll", syncScrollState, { passive: true });
         window.addEventListener("resize", syncShellState);
+
+        window.addEventListener("beforeunload", function (event) {
+          if (!storageAvailable && state.currentNodeId !== "welcome") {
+            event.preventDefault();
+            event.returnValue = "";
+          }
+        });
 
         // Draw the initial welcome screen and synchronize the sticky header appearance.
         render();
