@@ -1,0 +1,3343 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Back on Track Toolkit · Refined</title>
+    <style>
+      /* Shared colors, spacing, typography, and surface tokens. */
+      :root {
+        --bg: #f5f5f2;
+        --bg-panel: #fafaf8;
+        --surface: #ffffff;
+        --surface-strong: #ffffff;
+        --surface-muted: #f4f5f2;
+        --border: #dedfd9;
+        --border-strong: #a6ada5;
+        --text: #292e2b;
+        --text-muted: #5a635c;
+        --accent: #466353;
+        --accent-soft: #edf2ed;
+        --accent-strong: #304b3c;
+        --shadow: 0 2px 8px rgba(34, 42, 35, 0.025);
+        --radius: 10px;
+        --radius-small: 6px;
+        --max-width: 1400px;
+        --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --font-display: var(--font-body);
+        --section-accent: #8b9e8c;
+      }
+
+      /* Base document styles and consistent sizing for all elements. */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-body);
+        line-height: 1.55;
+      }
+
+      /* Home-screen layout overrides hide the review shell until a journey starts. */
+      body[data-home-screen="true"] .workspace {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: 100vh;
+        gap: 0;
+      }
+
+      body[data-home-screen="true"] .summary-panel,
+      body[data-home-screen="true"] .masthead-actions {
+        display: none;
+      }
+
+      body[data-home-screen="true"] {
+        background: var(--bg);
+      }
+
+      body[data-home-screen="true"] /* Page frame, sticky masthead, and main two-column workspace. */
+      .page-shell {
+        width: 100%;
+        max-width: none;
+        min-height: 100vh;
+        padding: 0;
+      }
+
+      body[data-home-screen="true"] .masthead {
+        display: none;
+      }
+
+      body[data-home-screen="true"] .masthead-intro {
+        display: none;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      .page-shell {
+        width: min(calc(100% - 2rem), var(--max-width));
+        margin: 0 auto;
+        padding: 1.5rem 0 2rem;
+      }
+
+      .masthead {
+        position: sticky;
+        top: 0;
+        z-index: 15;
+        margin-bottom: 1rem;
+      }
+
+      .masthead-bar {
+        display: flex;
+        gap: 1rem;
+        align-items: end;
+        justify-content: space-between;
+        padding: 1rem 0 0.9rem;
+        border-bottom: 1px solid transparent;
+        transition:
+          background-color 0.2s ease,
+          backdrop-filter 0.2s ease,
+          border-color 0.2s ease,
+          box-shadow 0.2s ease,
+          padding 0.2s ease;
+      }
+
+      body[data-scrolled="true"] .masthead-bar {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        background: rgba(245, 245, 242, 0.97);
+        border-color: var(--border);
+        box-shadow: var(--shadow);
+        backdrop-filter: none;
+      }
+
+      .masthead-copy {
+        max-width: 48rem;
+      }
+
+      .masthead h1,
+      .summary-screen h2,
+      .screen-question,
+      .screen-title {
+        margin: 0;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
+        font-family: var(--font-display);
+      }
+
+      .masthead h1 {
+        font-size: clamp(1.65rem, 2.8vw, 2.2rem);
+        font-weight: 600;
+      }
+
+      .intro,
+      .screen-helper,
+      .screen-body,
+      .summary-status,
+      .summary-screen-copy,
+      .empty-history,
+      .timeline-answer,
+      .timeline-action,
+      .screen-note {
+        color: var(--text-muted);
+      }
+
+      .eyebrow {
+        margin: 0 0 0.4rem;
+        color: var(--accent-strong);
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.015em;
+      }
+
+      .masthead-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      .masthead-intro {
+        margin-bottom: 1.5rem;
+      }
+
+      .masthead-intro .intro {
+        max-width: 60rem;
+        margin: 0;
+        font-size: clamp(1.05rem, 1.7vw, 1.25rem);
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1.75fr) 22rem;
+        gap: 1.25rem;
+        align-items: start;
+        min-height: calc(100vh - 10rem);
+      }
+
+      .card {
+        position: relative;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 0;
+        background: var(--section-accent);
+      }
+
+      .decision-stage,
+      /* Path summary sidebar, status card, and answer count. */
+      .summary-panel {
+        padding: 1.35rem;
+      }
+
+      .decision-stage {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 10rem);
+        height: auto;
+      }
+
+      body[data-home-screen="true"] .decision-stage {
+        min-height: 100vh;
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+        background: transparent;
+      }
+
+      body[data-home-screen="true"] .decision-stage::before {
+        display: none;
+      }
+
+      .summary-panel {
+        position: sticky;
+        top: 1rem;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 10rem);
+        background: var(--bg-panel);
+      }
+
+      .summary-panel::before {
+        background: var(--accent);
+      }
+
+      .summary-panel-header {
+        display: flex;
+        gap: 0.75rem;
+        align-items: start;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        flex: 0 0 auto;
+      }
+
+      .summary-panel h2 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 1.35rem;
+      }
+
+      .summary-status-card {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-small);
+        background: var(--surface);
+        flex: 0 0 auto;
+      }
+
+      .summary-status-label {
+        margin: 0 0 0.4rem;
+        color: var(--accent-strong);
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.015em;
+      }
+
+      .summary-status {
+        margin: 0;
+        font-size: 0.98rem;
+      }
+
+      .summary-metrics {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.75rem;
+        margin: 1rem 0 0;
+      }
+
+      .summary-metrics div {
+        padding: 0.85rem;
+        border-radius: var(--radius-small);
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+      }
+
+      .summary-metrics dt {
+        margin: 0 0 0.2rem;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.015em;
+      }
+
+      .summary-metrics dd {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
+
+      /* Screen containers and content panels for each decision-tree node. */
+      .screen-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      body[data-home-screen="true"] .screen-shell {
+        min-height: 100vh;
+        justify-content: center;
+        padding: clamp(2rem, 6vw, 5rem);
+      }
+
+      .screen-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      .meta-pill {
+        padding: 0.45rem 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--surface-muted);
+        color: var(--text);
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+
+      .home-link-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--accent);
+        cursor: pointer;
+      }
+
+      .home-link-button:hover {
+        color: var(--accent-strong);
+      }
+
+      .home-link-button svg {
+        width: 1.45rem;
+        height: 1.45rem;
+        flex: 0 0 auto;
+      }
+
+      #home-button {
+        display: none;
+      }
+
+      body:not([data-home-screen="true"]) #home-button {
+        display: inline-flex;
+      }
+
+      .screen-card {
+        display: flex;
+        flex-direction: column;
+        padding: clamp(1.2rem, 2vw, 2rem);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-small);
+        background: var(--surface);
+      }
+
+      body[data-home-screen="true"] .screen-card {
+        width: min(100%, 74rem);
+        margin: 0 auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
+      }
+
+      .screen-main {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      body[data-home-screen="true"] .screen-main {
+        gap: 1.5rem;
+      }
+
+      .screen-title {
+        font-size: clamp(1.2rem, 1.7vw, 1.5rem);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      body[data-home-screen="true"] .screen-title {
+        margin-bottom: 1rem;
+        color: var(--accent-strong);
+        font-size: 0.95rem;
+        letter-spacing: 0.02em;
+      }
+
+      .screen-question {
+        font-size: clamp(1.6rem, 2.6vw, 2.25rem);
+        margin-bottom: 1rem;
+        max-width: 24ch;
+        font-weight: 600;
+      }
+
+      body[data-home-screen="true"] .screen-question {
+        max-width: 20ch;
+        margin-bottom: 0;
+        font-size: clamp(2rem, 3.8vw, 3rem);
+        line-height: 1.17;
+      }
+
+      .screen-body {
+        margin: 0 0 1rem;
+        font-size: 1.08rem;
+        white-space: pre-line;
+      }
+
+      .screen-helper,
+      .screen-note {
+        margin: 0 0 1rem;
+        padding-left: 0.9rem;
+        border-left: 3px solid var(--section-accent);
+        font-size: 0.98rem;
+      }
+
+      .screen-content-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .question-panel,
+      .recommendation-panel,
+      .summary-panel-block {
+        padding: 1rem;
+        border: 1px solid var(--border);
+      }
+
+      .question-panel {
+        border-left: 3px solid var(--section-accent);
+        background: #ffffff;
+      }
+
+      .recommendation-panel {
+        border-left: 3px solid #b29864;
+        background: #faf7f0;
+      }
+
+      .success-panel {
+        border-left-color: #7a947c;
+        background: #f1f5ef;
+      }
+
+      .summary-panel-block {
+        border-left: 3px solid var(--section-accent);
+        background: #ffffff;
+      }
+
+      /* Welcome screen introduction and expandable frequently asked questions. */
+      .home-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(20rem, 0.9fr);
+        gap: clamp(2rem, 4vw, 4rem);
+        align-items: start;
+        max-width: 72rem;
+      }
+
+      body[data-home-screen="true"] .home-intro {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+
+      body[data-home-screen="true"] .home-intro /* Answer choices, navigation actions, and shared button states. */
+      .option-grid {
+        display: flex;
+        padding-top: 0.25rem;
+      }
+
+      body[data-home-screen="true"] .home-intro .button {
+        min-width: 10rem;
+      }
+
+      body[data-home-screen="true"] .screen-helper,
+      body[data-home-screen="true"] .screen-note {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        max-width: 50rem;
+        font-size: 1.1rem;
+      }
+
+      body[data-home-screen="true"] .screen-note {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      body[data-home-screen="true"] .screen-helper {
+        color: var(--text-muted);
+      }
+
+      .home-faq-panel {
+        padding: 1.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: none;
+        backdrop-filter: none;
+      }
+
+      .home-faq-title {
+        margin: 0 0 1rem;
+        color: var(--accent-strong);
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .home-faq-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .home-faq-item {
+        border: 0;
+        border-bottom: 1px solid var(--border);
+        border-radius: 0;
+        background: transparent;
+        overflow: hidden;
+      }
+
+      .home-faq-item summary {
+        position: relative;
+        padding: 1rem 3rem 1rem 1rem;
+        list-style: none;
+        cursor: pointer;
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .home-faq-item summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .home-faq-item summary::after {
+        content: "+";
+        position: absolute;
+        top: 50%;
+        right: 1rem;
+        transform: translateY(-50%);
+        color: var(--accent);
+        font-size: 1.35rem;
+        line-height: 1;
+      }
+
+      .home-faq-item[open] summary::after {
+        content: "\2212";
+      }
+
+      .home-faq-answer {
+        margin: 0;
+        padding: 0 1rem 1rem;
+        color: var(--text-muted);
+      }
+
+      .home-footer {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        text-align: center;
+      }
+
+      .home-footer-link {
+        color: var(--accent-strong);
+        font-weight: 600;
+      }
+
+      .home-footer-link:hover {
+        color: var(--accent);
+      }
+
+      .home-footer-link:focus-visible {
+        outline: 3px solid rgba(70, 99, 83, 0.45);
+        outline-offset: 2px;
+      }
+
+      .footer-actions-home {
+        display: block;
+        text-align: center;
+      }
+
+      .content-tag {
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        padding: 0.25rem 0.55rem;
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.015em;
+      }
+
+      .question-tag {
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+      }
+
+      .recommendation-tag {
+        background: #eee6d6;
+        color: #6b5833;
+      }
+
+      .success-tag {
+        background: #e5eee1;
+        color: #3f5940;
+      }
+
+      .option-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.85rem;
+        align-items: start;
+        padding-top: 0.5rem;
+      }
+
+      .footer-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.4rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.9rem;
+        padding: 0.78rem 1rem;
+        border: 1px solid transparent;
+        border-radius: var(--radius-small);
+        background: var(--accent);
+        color: #ffffff;
+        cursor: pointer;
+        font-weight: 600;
+        text-align: center;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .button:hover {
+        background: var(--accent-strong);
+      }
+
+      .button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .button-secondary {
+        border-color: var(--border);
+        background: #ffffff;
+        color: var(--text);
+      }
+
+      .button-secondary:hover {
+        background: var(--surface-muted);
+      }
+
+      .button-compact,
+      .button-icon {
+        min-height: 2.6rem;
+        padding: 0.65rem 0.9rem;
+      }
+
+      .button:focus-visible {
+        outline: 3px solid rgba(70, 99, 83, 0.45);
+        outline-offset: 2px;
+      }
+
+      .button-icon {
+        display: none;
+      }
+
+      /* Recorded answers and recommended actions shown in the path timeline. */
+      .history-list {
+        list-style: none;
+        margin: 1rem 0 0;
+        padding: 0;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+      }
+
+      .history-list li {
+        position: relative;
+        padding: 0.95rem 0.95rem 0.95rem 1.3rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-small);
+        background: #ffffff;
+      }
+
+      .history-list li + li {
+        margin-top: 0.8rem;
+      }
+
+      .history-list li::before {
+        content: "";
+        position: absolute;
+        left: 0.6rem;
+        top: 1rem;
+        bottom: 1rem;
+        width: 3px;
+        border-radius: 5px;
+        background: linear-gradient(180deg, var(--accent), rgba(70, 99, 83, 0.18));
+      }
+
+      .timeline-step {
+        display: inline-flex;
+        align-items: center;
+        min-width: 2rem;
+        min-height: 2rem;
+        margin-bottom: 0.5rem;
+        padding: 0 0.6rem;
+        border-radius: 5px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-size: 0.82rem;
+        font-weight: 600;
+      }
+
+      .timeline-question {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .timeline-answer,
+      .timeline-action {
+        display: block;
+        font-size: 0.96rem;
+      }
+
+      .timeline-action {
+        margin-top: 0.35rem;
+        padding-top: 0.45rem;
+        border-top: 1px dashed var(--border);
+      }
+
+      .summary-screen {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .summary-outcome-banner {
+        padding: 1.35rem 1.1rem 1rem;
+        margin-top: 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-small);
+        background: var(--accent-soft);
+      }
+
+      .summary-outcome-banner p {
+        margin: 0;
+      }
+
+      /* Completion report cards and export controls. */
+      .summary-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .summary-block {
+        padding: 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-small);
+        background: var(--surface-muted);
+      }
+
+      .summary-block h3 {
+        margin: 0 0 0.65rem;
+        font-size: 1rem;
+      }
+
+      .summary-screen-list {
+        margin: 0;
+        padding-left: 1.1rem;
+      }
+
+      .summary-screen-list li + li {
+        margin-top: 0.45rem;
+      }
+
+      .empty-history {
+        margin: 0;
+        padding: 1rem;
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-small);
+        background: #ffffff;
+      }
+
+      .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 19;
+        border: 0;
+        background: rgba(35, 42, 36, 0.28);
+      }
+
+      /* Responsive layouts, including the mobile slide-out path summary. */
+      @media (max-width: 1120px) {
+        .workspace {
+          grid-template-columns: minmax(0, 1fr) 19rem;
+        }
+
+        .screen-question {
+          max-width: 100%;
+        }
+
+      }
+
+      @media (max-width: 920px) {
+        .page-shell {
+          width: min(calc(100% - 1rem), var(--max-width));
+          padding-top: 1rem;
+        }
+
+        body[data-home-screen="true"] .page-shell {
+          width: 100%;
+          padding-top: 0;
+        }
+
+        .workspace {
+          grid-template-columns: 1fr;
+          min-height: auto;
+        }
+
+        .decision-stage {
+          min-height: auto;
+        }
+
+        .summary-panel {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 20;
+          width: min(92vw, 420px);
+          height: 100vh;
+          border-radius: 0;
+          transform: translateX(104%);
+          transition: transform 0.2s ease;
+        }
+
+        body[data-home-screen="true"] .summary-panel {
+          display: none;
+        }
+
+        body[data-home-screen="true"] .screen-shell {
+          padding: 1.5rem;
+        }
+
+        .home-panel {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 1.5rem;
+        }
+
+        body[data-sidebar-open="true"] .summary-panel {
+          transform: translateX(0);
+        }
+
+        .button-icon,
+        .button-compact {
+          display: inline-flex;
+        }
+
+      }
+
+      @media (min-width: 921px) {
+        #history-toggle-button,
+        #close-sidebar-button,
+        .sidebar-backdrop {
+          display: none !important;
+        }
+
+      }
+
+      @media (max-width: 640px) {
+        .page-shell {
+          padding-bottom: 1rem;
+        }
+
+        .masthead {
+          margin-bottom: 0.75rem;
+        }
+
+        .masthead-bar {
+          align-items: start;
+          padding-top: 0.75rem;
+          padding-bottom: 0.75rem;
+        }
+
+        .footer-actions {
+          flex-direction: column;
+        }
+
+        .button {
+          width: 100%;
+        }
+
+        .option-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .screen-card,
+        .decision-stage,
+        .summary-panel {
+          padding: 1rem;
+        }
+
+        .screen-question {
+          font-size: clamp(1.5rem, 6.5vw, 2rem);
+        }
+
+        .summary-metrics {
+          grid-template-columns: 1fr;
+        }
+
+        body[data-home-screen="true"] .screen-question {
+          font-size: clamp(1.85rem, 7vw, 2.5rem);
+        }
+
+      }
+
+      /* Accessible focus and reduced-motion preferences. */
+      :where(button, a, summary):focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 3px;
+      }
+
+      .home-faq-item:last-child {
+        border-bottom: 0;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *, *::before, *::after {
+          transition: none !important;
+        }
+
+      }
+
+      /* Refined edition: quiet surfaces, compact navigation, readable content. */
+      :root {
+        --bg: #f6f5f1;
+        --bg-panel: #fbfbf9;
+        --border: #e1e3dc;
+        --max-width: 1240px;
+        --radius: 12px;
+      }
+
+      .page-shell {
+        padding-top: 1.1rem;
+      }
+
+      .masthead {
+        top: 0;
+        margin-bottom: 1.5rem;
+      }
+
+      .masthead-bar {
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom-color: var(--border);
+      }
+
+      .masthead h1 {
+        font-size: 1.35rem;
+        letter-spacing: -0.025em;
+      }
+
+      .eyebrow {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+      }
+
+      .masthead-intro {
+        display: none;
+      }
+
+      .workspace {
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 1.5rem;
+        min-height: auto;
+      }
+
+      .decision-stage {
+        padding: clamp(1.5rem, 3vw, 2.75rem);
+        min-height: 35rem;
+      }
+
+      .screen-shell {
+        gap: 1.75rem;
+      }
+
+      .screen-card {
+        padding: 0;
+        border: 0;
+      }
+
+      .screen-meta {
+        gap: 0.65rem;
+      }
+
+      .meta-pill {
+        border: 0;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      .meta-pill + .meta-pill::before {
+        content: "/";
+        margin-right: 0.65rem;
+        color: #a6ada5;
+      }
+
+      .screen-title {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-bottom: 1.25rem;
+        font-weight: 500;
+      }
+
+      .question-panel, .summary-panel-block {
+        border: 0;
+        padding: 0;
+        background: transparent;
+      }
+
+      .content-tag {
+        padding: 0;
+        background: transparent;
+        color: var(--accent);
+        font-size: 0.78rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .screen-question {
+        font-size: clamp(1.6rem, 2.7vw, 2.15rem);
+        line-height: 1.28;
+        max-width: 30ch;
+        margin-bottom: 1rem;
+      }
+
+      .screen-question:focus {
+        outline: none;
+      }
+
+      .screen-helper, .screen-note {
+        border: 0;
+        padding: 0;
+        font-size: 1rem;
+        line-height: 1.65;
+      }
+
+      .recommendation-panel {
+        padding: 1.4rem;
+        border-radius: 8px;
+      }
+
+      .recommendation-tag {
+        color: #6b5833;
+      }
+
+      .success-tag {
+        color: #3f5940;
+      }
+
+      .option-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding-top: 1.25rem;
+      }
+
+      .option-grid .button {
+        min-width: 7.5rem;
+      }
+
+      .button {
+        min-height: 2.8rem;
+        padding: 0.7rem 1.15rem;
+        font-size: 0.95rem;
+        border-radius: 7px;
+      }
+
+      .button-secondary {
+        border-color: #c8cec6;
+        background: transparent;
+      }
+
+      .footer-actions {
+        gap: 0.65rem;
+        padding-top: 1.25rem;
+        margin-top: 2.5rem;
+      }
+
+      .footer-actions .button {
+        font-size: 0.85rem;
+      }
+
+      .footer-actions .button:nth-child(2) {
+        margin-left: auto;
+      }
+
+      .summary-panel {
+        top: 6.5rem;
+        padding: 1.25rem;
+        height: calc(100dvh - 8rem);
+        max-height: 850px;
+        min-height: 22rem;
+        box-shadow: none;
+      }
+
+      .summary-panel h2 {
+        font-size: 1rem;
+      }
+
+      .summary-status-card {
+        border: 0;
+        padding: 0 0 1rem;
+        border-bottom: 1px solid var(--border);
+        background: transparent;
+        margin-bottom: 0;
+      }
+
+      .summary-status-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      .summary-status {
+        font-size: 0.88rem;
+      }
+
+      .summary-metrics {
+        margin-top: 0.75rem;
+      }
+
+      .summary-metrics div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0;
+        border: 0;
+        background: transparent;
+      }
+
+      .summary-metrics dt {
+        font-size: 0.8rem;
+        margin: 0;
+        font-weight: 400;
+      }
+
+      .summary-metrics dd {
+        font-size: 1rem;
+      }
+
+      .history-list {
+        margin-top: 1rem;
+      }
+
+      .history-list li {
+        padding: 0.85rem 0.85rem 0.85rem 1.2rem;
+        border-radius: 8px;
+      }
+
+      .timeline-step {
+        font-size: 0.72rem;
+        min-height: 1.5rem;
+        padding: 0 0.4rem;
+        margin-bottom: 0.4rem;
+      }
+
+      .timeline-question, .timeline-answer, .timeline-action {
+        font-size: 0.85rem;
+        line-height: 1.5;
+      }
+
+      .journey-tools {
+        flex: 0 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        border-top: 1px solid var(--border);
+        padding-top: 1rem;
+        margin-top: 1rem;
+      }
+
+      .journey-tools .button {
+        font-size: 0.78rem;
+        padding: 0.55rem 0.7rem;
+        min-height: 2.4rem;
+        flex: 1;
+      }
+
+      .journey-note {
+        flex: 0 0 100%;
+        font-size: 0.75rem;
+        line-height: 1.5;
+        color: var(--text-muted);
+        margin: 0.25rem 0 0;
+      }
+
+      #copy-status:empty {
+        display: none;
+      }
+
+      .empty-history {
+        font-size: 0.85rem;
+        padding: 1rem;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-block {
+        padding: 1.2rem;
+      }
+
+      body[data-home-screen="true"] .screen-shell {
+        padding: clamp(1.5rem, 5vw, 4rem);
+      }
+
+      body[data-home-screen="true"] .screen-card {
+        width: min(100%, 1120px);
+      }
+
+      body[data-home-screen="true"] .screen-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 2.5rem;
+      }
+
+      .home-panel {
+        grid-template-columns: minmax(0, 1.2fr) minmax(19rem, 0.85fr);
+        gap: clamp(2rem, 6vw, 5rem);
+      }
+
+      body[data-home-screen="true"] .home-intro {
+        gap: 1.25rem;
+      }
+
+      body[data-home-screen="true"] .screen-question {
+        max-width: 14ch;
+        font-size: clamp(2.4rem, 4.4vw, 3.8rem);
+        line-height: 1.08;
+        letter-spacing: -0.04em;
+      }
+
+      .home-description {
+        margin: 0;
+        max-width: 44ch;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        line-height: 1.7;
+      }
+
+      body[data-home-screen="true"] .screen-note {
+        font-size: 0.95rem;
+        font-weight: 400;
+        color: var(--text-muted);
+      }
+
+      body[data-home-screen="true"] .home-intro .option-grid {
+        padding-top: 0.5rem;
+      }
+
+      .home-hint {
+        margin: -0.4rem 0 0;
+        color: var(--text-muted);
+        font-size: 0.78rem;
+      }
+
+      .home-faq-panel {
+        padding: 1.5rem;
+        box-shadow: none;
+      }
+
+      .home-faq-title {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .home-faq-list {
+        gap: 0;
+      }
+
+      .home-faq-item summary {
+        font-size: 0.9rem;
+        line-height: 1.5;
+        padding: 1.1rem 1.5rem 1.1rem 0;
+      }
+
+      .home-faq-item summary::after {
+        right: 0;
+        font-size: 1.1rem;
+      }
+
+      .home-faq-answer {
+        padding: 0 0 1rem;
+        font-size: 0.88rem;
+        line-height: 1.6;
+      }
+
+      .footer-actions-home {
+        margin-top: 3rem;
+        padding-top: 1.25rem;
+      }
+
+      .home-footer {
+        font-size: 0.78rem;
+        text-align: left;
+      }
+
+      @media (max-width: 920px) {
+        .workspace {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .summary-panel {
+          top: 0;
+          height: 100dvh;
+          max-height: none;
+          width: min(92vw, 380px);
+          border-radius: 0;
+          visibility: hidden;
+        }
+
+        body[data-sidebar-open="true"] .summary-panel {
+          visibility: visible;
+        }
+
+        body[data-sidebar-open="true"] {
+          overflow: hidden;
+        }
+
+        .home-panel {
+          grid-template-columns: 1fr;
+          gap: 2.5rem;
+        }
+
+        body[data-home-screen="true"] .screen-card {
+          max-width: 42rem;
+        }
+
+        body[data-home-screen="true"] .screen-question {
+          max-width: 18ch;
+        }
+
+        .decision-stage {
+          min-height: 28rem;
+        }
+
+        .masthead h1 {
+          font-size: 1.1rem;
+        }
+
+      }
+
+      @media (max-width: 640px) {
+        .page-shell {
+          width: calc(100% - 1.5rem);
+        }
+
+        .masthead-actions {
+          gap: 0.5rem;
+        }
+
+        .masthead .eyebrow {
+          font-size: 0.65rem;
+        }
+
+        .masthead h1 {
+          font-size: 1rem;
+        }
+
+        .masthead-actions .button {
+          width: auto;
+          font-size: 0.8rem;
+          padding: 0.55rem 0.7rem;
+        }
+
+        .decision-stage {
+          padding: 1.4rem;
+        }
+
+        .screen-question {
+          font-size: 1.6rem;
+        }
+
+        .option-grid {
+          flex-direction: column;
+        }
+
+        .option-grid .button {
+          width: 100%;
+        }
+
+        .footer-actions {
+          flex-direction: row;
+        }
+
+        .footer-actions .button {
+          width: auto;
+        }
+
+        body[data-home-screen="true"] .screen-question {
+          font-size: 2.5rem;
+        }
+
+        body[data-home-screen="true"] .home-intro .option-grid {
+          display: block;
+        }
+
+        body[data-home-screen="true"] .screen-title {
+          margin-bottom: 1.75rem;
+        }
+
+        .home-faq-panel {
+          padding: 1.25rem;
+        }
+
+      }
+    </style>
+  </head>
+  <body data-sidebar-open="false">
+    <div class="page-shell">
+      <!-- Page title and controls for returning home or viewing the path taken. -->
+      <header class="masthead">
+        <div class="masthead-bar">
+          <div class="masthead-copy">
+            <p class="eyebrow">Research Ready Toolkit</p>
+            <h1>Back on Track Toolkit</h1>
+          </div>
+
+          <div class="masthead-actions">
+            <button
+              id="home-button"
+              class="home-link-button"
+              type="button"
+              aria-label="Return to home"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M4 11.5 12 5l8 6.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+                <path
+                  d="M7 10.5V19h10v-8.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+              </svg>
+            </button>
+            <button
+              id="history-toggle-button"
+              class="button button-secondary button-compact"
+              type="button"
+              aria-controls="summary-panel"
+              aria-expanded="false"
+            >
+              Path taken
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="masthead-intro">
+        <p class="intro">
+          A structured decision tool for research delivery teams to review
+          recruitment barriers, recommended actions, and the pathway taken.
+        </p>
+      </div>
+
+      <div class="workspace">
+        <!-- JavaScript renders the current question, recommendation, or summary here. -->
+        <main
+          id="app"
+          class="card decision-stage"
+          tabindex="-1"
+          aria-live="polite"
+        ></main>
+
+        <!-- Journey status, recorded answers, and progress export controls. -->
+        <aside
+          id="summary-panel"
+          class="card summary-panel"
+          aria-labelledby="summary-panel-title"
+        >
+          <div class="summary-panel-header">
+            <div>
+              <h2 id="summary-panel-title">Path taken</h2>
+            </div>
+
+            <button
+              id="close-sidebar-button"
+              class="button button-secondary button-icon"
+              type="button"
+              aria-label="Close path summary"
+            >
+              Close
+            </button>
+          </div>
+
+          <section class="summary-status-card" aria-labelledby="summary-status-title">
+            <p id="summary-status-title" class="summary-status-label">Current status</p>
+            <p id="summary-status" class="summary-status">
+              Your answers and recommended actions will appear here as you work
+              through the toolkit.
+            </p>
+            <dl class="summary-metrics">
+              <div>
+                <dt>Questions answered</dt>
+                <dd id="summary-count">0</dd>
+              </div>
+            </dl>
+          </section>
+
+          <ol id="history-list" class="history-list"></ol>
+          <div class="journey-tools" aria-label="Export your progress">
+            <button id="copy-progress" class="button button-secondary" type="button" data-copy-summary>Copy summary</button>
+            <button id="download-progress" class="button button-secondary" type="button">Download CSV</button>
+            <p class="journey-note">Your progress stays in this tab. Download a copy before closing.</p>
+            <p id="copy-status" class="journey-note" role="status"></p>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Backdrop closes the path summary when it is displayed as a mobile dialog. -->
+    <button
+      id="sidebar-backdrop"
+      class="sidebar-backdrop"
+      type="button"
+      aria-label="Close path summary"
+      hidden
+    ></button>
+
+    <script>
+      // Decision-tree content: node IDs connect questions, actions, exits, and the final summary.
+      window.toolkitData = {
+        // Display order used for section progress labels.
+        sections: [
+          "Monitoring Recruitment",
+          "Escalation",
+          "Access to Patients",
+          "Study Protocol",
+          "Delivery Staff Resources",
+          "Support Services",
+          "Study Supplies and Equipment",
+          "Training",
+          "IT",
+          "Communication and Awareness",
+          "Patient Pathway",
+          "Share and Learn"
+        ],
+        // Each next value and option.next value refers to another node ID below.
+        nodes: {
+          // Start: related screens and their branching routes.
+          welcome: {
+            id: "welcome",
+            type: "section_start",
+            layout: "home",
+            section: "Start",
+            title: "Back on Track Toolkit",
+            text: "This toolkit helps research delivery teams work through a structured set of questions when a study is missing recruitment milestones.",
+            faqs: [
+              {
+                question: "Who should use this toolkit?",
+                answer: "Research delivery teams can use this toolkit when a study is not meeting expected recruitment milestones and a structured review is needed."
+              },
+              {
+                question: "What does the toolkit do?",
+                answer: "It guides teams through key questions across study delivery, highlights possible barriers, and records the recommended actions and pathway taken."
+              },
+              {
+                question: "Will I get a summary at the end?",
+                answer: "Yes. At the end of the journey you can review the completion summary and download the pathway taken as a CSV."
+              },
+              {
+                question: "Who do I contact for technical support?",
+                answer: "For technical support, contact tate.graham2@nhs.net."
+              }
+            ],
+            next: "toolkit_intro",
+            nextLabel: "Continue"
+          },
+          toolkit_intro: {
+            id: "toolkit_intro",
+            type: "section_start",
+            section: "Start",
+            title: "Back on Track Toolkit",
+            text: "Use this toolkit to work through a structured set of questions when a study is missing recruitment milestones.",
+            next: "start_question",
+            nextLabel: "Start toolkit"
+          },
+          start_question: {
+            id: "start_question",
+            type: "question",
+            section: "Start",
+            title: "Starting point",
+            text: "Is the study missing recruitment milestones?",
+            options: [
+              { label: "Yes", next: "intro_missing" },
+              { label: "No", next: "on_track" }
+            ]
+          },
+          on_track: {
+            id: "on_track",
+            type: "exit",
+            section: "Start",
+            title: "Study on track",
+            text: "Great news, the study is on track. You can still use this tool to help keep the study on track while you continue to monitor study performance.",
+            next: "completion_summary",
+            nextLabel: "Finish",
+            outcome: "on_track"
+          },
+          intro_missing: {
+            id: "intro_missing",
+            type: "action",
+            section: "Start",
+            title: "Toolkit overview",
+            text: "Work through each section to determine why the study is failing. You can see a summary of suggested actions at the end of the toolkit.",
+            next: "monitoring_tools"
+          },
+
+          // Monitoring Recruitment: related screens and their branching routes.
+          monitoring_tools: {
+            id: "monitoring_tools",
+            type: "question",
+            section: "Monitoring Recruitment",
+            title: "Monitoring Recruitment",
+            text: "Do you have the right tools, access and training to monitor recruitment?",
+            helperText: "Examples: EDGE, ODP, effective screening log.",
+            options: [
+              { label: "Yes", next: "escalation_issues" },
+              { label: "No", next: "monitoring_action" }
+            ]
+          },
+          monitoring_action: {
+            id: "monitoring_action",
+            type: "action",
+            section: "Monitoring Recruitment",
+            title: "Monitoring Recruitment",
+            text: "Implement a system to monitor and track performance.",
+            next: "monitoring_training_issue"
+          },
+          monitoring_training_issue: {
+            id: "monitoring_training_issue",
+            type: "question",
+            section: "Monitoring Recruitment",
+            title: "Monitoring Recruitment",
+            text: "Is there a training issue?",
+            options: [
+              { label: "Yes", next: "training_gaps" },
+              { label: "No", next: "escalation_issues" }
+            ]
+          },
+
+          // Escalation: related screens and their branching routes.
+          escalation_issues: {
+            id: "escalation_issues",
+            type: "question",
+            section: "Escalation",
+            title: "Escalation",
+            text: "Do you have issues that you have been unable to resolve?",
+            options: [
+              { label: "Yes", next: "escalation_already" },
+              { label: "No", next: "access_patients_clinical_team" }
+            ]
+          },
+          escalation_already: {
+            id: "escalation_already",
+            type: "question",
+            section: "Escalation",
+            title: "Escalation",
+            text: "Have you escalated the study?",
+            options: [
+              { label: "Yes", next: "escalation_barriers" },
+              { label: "No", next: "escalation_action" }
+            ]
+          },
+          escalation_action: {
+            id: "escalation_action",
+            type: "action",
+            section: "Escalation",
+            title: "Escalation",
+            text: "Escalate to the appropriate people or teams. This may include the Principal Investigator, Team Lead, R&D, RRDN, Sponsor, or other relevant stakeholders.",
+            next: "escalation_barriers"
+          },
+          escalation_barriers: {
+            id: "escalation_barriers",
+            type: "question",
+            section: "Escalation",
+            title: "Escalation",
+            text: "Are the barriers still impeding recruitment even after escalation?",
+            options: [
+              { label: "Yes", next: "escalation_exit" },
+              { label: "No", next: "access_patients_clinical_team" }
+            ]
+          },
+          escalation_exit: {
+            id: "escalation_exit",
+            type: "exit",
+            section: "Escalation",
+            title: "Escalation required",
+            text: "R&D / Team Lead should inform the Chief Investigator and Sponsor that the study will not deliver to time and target at the site, and determine next steps.",
+            next: "completion_summary",
+            nextLabel: "View summary",
+            outcome: "early_exit"
+          },
+
+          // Access to Patients: related screens and their branching routes.
+          access_patients_clinical_team: {
+            id: "access_patients_clinical_team",
+            type: "question",
+            section: "Access to Patients",
+            title: "Access to Patients",
+            text: "Are you struggling to get the clinical team to approach patients to initially discuss the study?",
+            options: [
+              { label: "Yes", next: "access_patients_action" },
+              { label: "No", next: "protocol_impeding" }
+            ]
+          },
+          access_patients_action: {
+            id: "access_patients_action",
+            type: "action",
+            section: "Access to Patients",
+            title: "Access to Patients",
+            text: "Facilitate a meeting with the Principal Investigator to identify appropriate and workable solutions. If unsuccessful, escalate to the Team Lead.",
+            next: "protocol_impeding"
+          },
+
+          // Study Protocol: related screens and their branching routes.
+          protocol_impeding: {
+            id: "protocol_impeding",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Is the protocol impeding recruitment?",
+            options: [
+              { label: "Yes", next: "protocol_inclusion_impeding" },
+              { label: "No", next: "staff_clinical_lack" }
+            ]
+          },
+          protocol_inclusion_impeding: {
+            id: "protocol_inclusion_impeding",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Are the inclusion/exclusion criteria impeding recruitment?",
+            options: [
+              { label: "Yes", next: "protocol_discussed_with_sponsor" },
+              { label: "No", next: "protocol_substantial_modification" }
+            ]
+          },
+          protocol_discussed_with_sponsor: {
+            id: "protocol_discussed_with_sponsor",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Has this been discussed with the PI and brought to the attention of the Sponsor?",
+            options: [
+              { label: "Yes", next: "protocol_continue_with_restrictions" },
+              { label: "No", next: "protocol_inform_sponsor" }
+            ]
+          },
+          protocol_inform_sponsor: {
+            id: "protocol_inform_sponsor",
+            type: "action",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Inform the Sponsor.",
+            next: "protocol_continue_with_restrictions"
+          },
+          protocol_continue_with_restrictions: {
+            id: "protocol_continue_with_restrictions",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Can you continue to deliver the study with the inclusion/exclusion criteria restrictions?",
+            options: [
+              { label: "Yes", next: "protocol_substantial_modification" },
+              { label: "No", next: "protocol_site_will_not_deliver_exit" }
+            ]
+          },
+          protocol_substantial_modification: {
+            id: "protocol_substantial_modification",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Is a substantial modification impeding recruitment?",
+            options: [
+              { label: "Yes", next: "protocol_substantial_modification_action" },
+              { label: "No", next: "protocol_participant_requirements" }
+            ]
+          },
+          protocol_substantial_modification_action: {
+            id: "protocol_substantial_modification_action",
+            type: "action",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Discuss with the PI, R&D and Team Lead to determine whether the study is still viable and identify potential solutions.",
+            next: "protocol_study_viable"
+          },
+          protocol_study_viable: {
+            id: "protocol_study_viable",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Is the study still viable?",
+            options: [
+              { label: "Yes", next: "protocol_resume_after_modification" },
+              { label: "No", next: "protocol_not_viable_exit" }
+            ]
+          },
+          protocol_resume_after_modification: {
+            id: "protocol_resume_after_modification",
+            type: "action",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Implement relevant changes and resume recruitment following approval of the protocol modification.",
+            next: "staff_clinical_lack"
+          },
+          protocol_not_viable_exit: {
+            id: "protocol_not_viable_exit",
+            type: "exit",
+            section: "Study Protocol",
+            title: "Study viability issue",
+            text: "R&D / Team Lead should inform the Chief Investigator and Sponsor that the study will not deliver to time and target at the site. Determine next steps.",
+            next: "completion_summary",
+            nextLabel: "View summary",
+            outcome: "early_exit"
+          },
+          protocol_participant_requirements: {
+            id: "protocol_participant_requirements",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Are the requirements on participants during the study impeding recruitment?",
+            helperText: "Examples: number and frequency of visits, venue, follow-up arrangements.",
+            options: [
+              { label: "Yes", next: "protocol_reduce_impact" },
+              { label: "No", next: "protocol_supporting_services_requirements" }
+            ]
+          },
+          protocol_reduce_impact: {
+            id: "protocol_reduce_impact",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Can these be managed to reduce the negative impact on participants?",
+            helperText: "Examples: combining visits, remote visits, venues to suit patients, reimbursed travel expenses.",
+            options: [
+              { label: "Yes", next: "protocol_reduce_impact_action" },
+              { label: "No", next: "protocol_continue_with_patient_journey" }
+            ]
+          },
+          protocol_reduce_impact_action: {
+            id: "protocol_reduce_impact_action",
+            type: "action",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Implement necessary changes and resume recruitment.",
+            next: "staff_clinical_lack"
+          },
+          protocol_continue_with_patient_journey: {
+            id: "protocol_continue_with_patient_journey",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Can you continue to deliver the study within the confines of the patient journey as specified in the study protocol?",
+            options: [
+              { label: "Yes", next: "protocol_supporting_services_requirements" },
+              { label: "No", next: "protocol_site_will_not_deliver_exit" }
+            ]
+          },
+          protocol_supporting_services_requirements: {
+            id: "protocol_supporting_services_requirements",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Are the requirements of the protocol on supporting services or departments affecting study delivery?",
+            options: [
+              { label: "Yes", next: "protocol_supporting_services_action" },
+              { label: "No", next: "protocol_competing_studies" }
+            ]
+          },
+          protocol_supporting_services_action: {
+            id: "protocol_supporting_services_action",
+            type: "action",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Identify with the supporting department the reasons why study delivery is being impeded.",
+            next: "support_services_resource_issue"
+          },
+          protocol_competing_studies: {
+            id: "protocol_competing_studies",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Are competing studies affecting delivery of this study?",
+            options: [
+              { label: "Yes", next: "protocol_competing_studies_action" },
+              { label: "No", next: "protocol_other_issues" }
+            ]
+          },
+          protocol_competing_studies_action: {
+            id: "protocol_competing_studies_action",
+            type: "action",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Discuss with Team Lead, R&D, Principal Investigator, clinical team and Sponsor to identify issues and options for managing this.",
+            next: "protocol_competing_studies_ongoing"
+          },
+          protocol_competing_studies_ongoing: {
+            id: "protocol_competing_studies_ongoing",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Is the issue still ongoing?",
+            options: [
+              { label: "Yes", next: "protocol_participant_requirements" },
+              { label: "No", next: "protocol_other_issues" }
+            ]
+          },
+          protocol_other_issues: {
+            id: "protocol_other_issues",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Are there any other aspects of the study protocol impeding recruitment?",
+            options: [
+              { label: "Yes", next: "protocol_other_issues_action" },
+              { label: "No", next: "staff_clinical_lack" }
+            ]
+          },
+          protocol_other_issues_action: {
+            id: "protocol_other_issues_action",
+            type: "action",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Discuss with Team Lead, R&D, Principal Investigator, clinical team and Sponsor to identify issues and options for managing this.",
+            next: "protocol_other_issues_ongoing"
+          },
+          protocol_other_issues_ongoing: {
+            id: "protocol_other_issues_ongoing",
+            type: "question",
+            section: "Study Protocol",
+            title: "Study Protocol",
+            text: "Is the issue still ongoing?",
+            options: [
+              { label: "Yes", next: "protocol_participant_requirements" },
+              { label: "No", next: "staff_clinical_lack" }
+            ]
+          },
+          protocol_site_will_not_deliver_exit: {
+            id: "protocol_site_will_not_deliver_exit",
+            type: "exit",
+            section: "Study Protocol",
+            title: "Delivery risk",
+            text: "Discuss with Team Lead, PI and R&D team with a view to informing the Chief Investigator and Sponsor that the study will not deliver to time and target at the site. Determine next steps.",
+            next: "completion_summary",
+            nextLabel: "View summary",
+            outcome: "early_exit"
+          },
+
+          // Delivery Staff Resources: related screens and their branching routes.
+          staff_clinical_lack: {
+            id: "staff_clinical_lack",
+            type: "question",
+            section: "Delivery Staff Resources",
+            title: "Delivery Staff Resources",
+            text: "Is recruitment being affected by a lack of clinical staff to support patient identification and recruitment?",
+            options: [
+              { label: "Yes", next: "staff_clinical_action" },
+              { label: "No", next: "staff_research_lack" }
+            ]
+          },
+          staff_clinical_action: {
+            id: "staff_clinical_action",
+            type: "action",
+            section: "Delivery Staff Resources",
+            title: "Delivery Staff Resources",
+            text: "Discuss potential solutions with the Principal Investigator.",
+            next: "staff_clinical_resolved"
+          },
+          staff_clinical_resolved: {
+            id: "staff_clinical_resolved",
+            type: "question",
+            section: "Delivery Staff Resources",
+            title: "Delivery Staff Resources",
+            text: "Has this resolved the issue?",
+            options: [
+              { label: "Yes", next: "staff_research_lack" },
+              { label: "No", next: "staff_resource_exit" }
+            ]
+          },
+          staff_research_lack: {
+            id: "staff_research_lack",
+            type: "question",
+            section: "Delivery Staff Resources",
+            title: "Delivery Staff Resources",
+            text: "Is recruitment being affected by a lack of research staff to run the study?",
+            options: [
+              { label: "Yes", next: "staff_workload_review" },
+              { label: "No", next: "support_services_resource_issue" }
+            ]
+          },
+          staff_workload_review: {
+            id: "staff_workload_review",
+            type: "question",
+            section: "Delivery Staff Resources",
+            title: "Delivery Staff Resources",
+            text: "Will a workload review address this problem?",
+            options: [
+              { label: "Yes", next: "support_services_resource_issue" },
+              { label: "No", next: "staff_resource_exit" }
+            ]
+          },
+          staff_resource_exit: {
+            id: "staff_resource_exit",
+            type: "exit",
+            section: "Delivery Staff Resources",
+            title: "Resource escalation",
+            text: "Discuss with R&D / Team Lead. If appropriate, R&D / Team Lead should inform the Chief Investigator and Sponsor that the study will not deliver to time and target at the site and determine next steps.",
+            next: "completion_summary",
+            nextLabel: "View summary",
+            outcome: "early_exit"
+          },
+
+          // Support Services: related screens and their branching routes.
+          support_services_resource_issue: {
+            id: "support_services_resource_issue",
+            type: "question",
+            section: "Support Services",
+            title: "Support Services",
+            text: "Is recruitment being affected by a resource issue in support services?",
+            helperText: "Examples: pharmacy, radiology, pathology.",
+            options: [
+              { label: "Yes", next: "support_services_resolve_with_department" },
+              { label: "No", next: "supplies_absent" }
+            ]
+          },
+          support_services_resolve_with_department: {
+            id: "support_services_resolve_with_department",
+            type: "question",
+            section: "Support Services",
+            title: "Support Services",
+            text: "Can the issue be resolved by working with the supporting service department to implement a solution?",
+            options: [
+              { label: "Yes", next: "supplies_absent" },
+              { label: "No", next: "support_services_funding" }
+            ]
+          },
+          support_services_funding: {
+            id: "support_services_funding",
+            type: "question",
+            section: "Support Services",
+            title: "Support Services",
+            text: "Is there adequate funding provided within the study grant to support study activity?",
+            options: [
+              { label: "Yes", next: "support_services_funding_action" },
+              { label: "No", next: "support_services_exit" }
+            ]
+          },
+          support_services_funding_action: {
+            id: "support_services_funding_action",
+            type: "action",
+            section: "Support Services",
+            title: "Support Services",
+            text: "If additional funding is not the solution to the resource issue, discuss with Team Lead and relevant R&D staff to identify the cause and consider whether escalation is required.",
+            next: "supplies_absent"
+          },
+          support_services_exit: {
+            id: "support_services_exit",
+            type: "exit",
+            section: "Support Services",
+            title: "Support Services escalation",
+            text: "Discuss with R&D / Team Lead. If appropriate, R&D / Team Lead should inform the Chief Investigator and Sponsor that the study will not deliver to time and target at the site and determine next steps.",
+            next: "completion_summary",
+            nextLabel: "View summary",
+            outcome: "early_exit"
+          },
+
+          // Study Supplies and Equipment: related screens and their branching routes.
+          supplies_absent: {
+            id: "supplies_absent",
+            type: "question",
+            section: "Study Supplies and Equipment",
+            title: "Study Supplies and Equipment",
+            text: "Is study delivery being affected by the absence of study drugs, consumables, equipment or packaging?",
+            options: [
+              { label: "Yes", next: "supplies_sponsor_address" },
+              { label: "No", next: "training_gaps" }
+            ]
+          },
+          supplies_sponsor_address: {
+            id: "supplies_sponsor_address",
+            type: "question",
+            section: "Study Supplies and Equipment",
+            title: "Study Supplies and Equipment",
+            text: "Can the Sponsor address the needs to a satisfactory conclusion?",
+            options: [
+              { label: "Yes", next: "training_gaps" },
+              { label: "No", next: "supplies_external_escalation" }
+            ]
+          },
+          supplies_external_escalation: {
+            id: "supplies_external_escalation",
+            type: "action",
+            section: "Study Supplies and Equipment",
+            title: "Study Supplies and Equipment",
+            text: "Discuss with Team Lead, R&D, relevant support services and Principal Investigator as appropriate, with a view to starting an external escalation process involving the RRDN, Chief Investigator and Sponsor.",
+            next: "training_gaps"
+          },
+
+          // Training: related screens and their branching routes.
+          training_gaps: {
+            id: "training_gaps",
+            type: "question",
+            section: "Training",
+            title: "Training",
+            text: "Are there any training gaps that are affecting study delivery?",
+            options: [
+              { label: "Yes", next: "training_action" },
+              { label: "No", next: "it_issues" }
+            ]
+          },
+          training_action: {
+            id: "training_action",
+            type: "action",
+            section: "Training",
+            title: "Training",
+            text: "Identify training needs and work with the Sponsor and clinical teams to address them.",
+            next: "it_issues"
+          },
+
+          // IT: related screens and their branching routes.
+          it_issues: {
+            id: "it_issues",
+            type: "question",
+            section: "IT",
+            title: "IT",
+            text: "Is the study being affected by IT issues?",
+            helperText: "Examples: remote access to study databases for eCRF collection or training, access to monitoring and tracking systems, access to laptops/iPads/PCs, study software, external Wi-Fi.",
+            options: [
+              { label: "Yes", next: "it_local_trust_responsibility" },
+              { label: "No", next: "communication_strategy_reviewed" }
+            ]
+          },
+          it_local_trust_responsibility: {
+            id: "it_local_trust_responsibility",
+            type: "question",
+            section: "IT",
+            title: "IT",
+            text: "Is it the responsibility of the local Trust IT department to resolve?",
+            options: [
+              { label: "Yes", next: "it_local_trust_action" },
+              { label: "No", next: "it_sponsor_resolve" }
+            ]
+          },
+          it_local_trust_action: {
+            id: "it_local_trust_action",
+            type: "action",
+            section: "IT",
+            title: "IT",
+            text: "Work with the Trust IT department to address the issue. Escalate to Team Lead, Sponsor, Principal Investigator and RRDN as appropriate.",
+            next: "it_local_trust_timely"
+          },
+          it_local_trust_timely: {
+            id: "it_local_trust_timely",
+            type: "question",
+            section: "IT",
+            title: "IT",
+            text: "Can the local Trust IT department resolve the block in a timely way?",
+            options: [
+              { label: "Yes", next: "communication_strategy_reviewed" },
+              { label: "No", next: "it_local_trust_exit" }
+            ]
+          },
+          it_local_trust_exit: {
+            id: "it_local_trust_exit",
+            type: "exit",
+            section: "IT",
+            title: "IT escalation",
+            text: "Discuss with Team Lead, PI and R&D team with a view to informing the Chief Investigator and Sponsor that the study will not deliver to time and target at the site and determine next steps.",
+            next: "completion_summary",
+            nextLabel: "View summary",
+            outcome: "early_exit"
+          },
+          it_sponsor_resolve: {
+            id: "it_sponsor_resolve",
+            type: "question",
+            section: "IT",
+            title: "IT",
+            text: "Can the Sponsor resolve the block in a timely way?",
+            options: [
+              { label: "Yes", next: "communication_strategy_reviewed" },
+              { label: "No", next: "it_sponsor_exit" }
+            ]
+          },
+          it_sponsor_exit: {
+            id: "it_sponsor_exit",
+            type: "exit",
+            section: "IT",
+            title: "IT escalation",
+            text: "Escalate the unresolved IT issue with Team Lead, PI, R&D, Sponsor and/or RRDN as appropriate and determine next steps.",
+            next: "completion_summary",
+            nextLabel: "View summary",
+            outcome: "early_exit"
+          },
+
+          // Communication and Awareness: related screens and their branching routes.
+          communication_strategy_reviewed: {
+            id: "communication_strategy_reviewed",
+            type: "question",
+            section: "Communication and Awareness",
+            title: "Communication and Awareness",
+            text: "Have you reviewed your recruitment strategy to consider new ways of promoting and raising awareness of the study?",
+            options: [
+              { label: "Yes", next: "communication_materials" },
+              { label: "No", next: "communication_revisit_strategy" }
+            ]
+          },
+          communication_revisit_strategy: {
+            id: "communication_revisit_strategy",
+            type: "action",
+            section: "Communication and Awareness",
+            title: "Communication and Awareness",
+            text: "Revisit your recruitment strategy.",
+            next: "communication_materials"
+          },
+          communication_materials: {
+            id: "communication_materials",
+            type: "question",
+            section: "Communication and Awareness",
+            title: "Communication and Awareness",
+            text: "Do you have recruitment materials?",
+            helperText: "Examples: study posters, banners, leaflets, ethics-approved social media text, summary sheets, materials for patient and public areas, MDT clinics, staffrooms, staff newsletters, WhatsApp groups, community sites, GP surgeries, walk-in centres, social media, local radio/TV and patient groups.",
+            options: [
+              { label: "Yes", next: "communication_epic" },
+              { label: "No", next: "communication_escalate_resources" }
+            ]
+          },
+          communication_escalate_resources: {
+            id: "communication_escalate_resources",
+            type: "action",
+            section: "Communication and Awareness",
+            title: "Communication and Awareness",
+            text: "Escalate required resources to the Sponsor / RRDN.",
+            next: "communication_sponsor_actioning"
+          },
+          communication_sponsor_actioning: {
+            id: "communication_sponsor_actioning",
+            type: "question",
+            section: "Communication and Awareness",
+            title: "Communication and Awareness",
+            text: "Is the Sponsor actioning the request?",
+            options: [
+              { label: "Yes", next: "communication_epic" },
+              { label: "No", next: "communication_exit" }
+            ]
+          },
+          communication_exit: {
+            id: "communication_exit",
+            type: "exit",
+            section: "Communication and Awareness",
+            title: "Communication escalation",
+            text: "Discuss with Team Lead, PI and R&D team with a view to informing the Chief Investigator and Sponsor that the study will not deliver to time and target at the site and determine next steps.",
+            next: "completion_summary",
+            nextLabel: "View summary",
+            outcome: "early_exit"
+          },
+          communication_epic: {
+            id: "communication_epic",
+            type: "question",
+            section: "Communication and Awareness",
+            title: "Communication and Awareness",
+            text: "Can EPIC be used for effective communication, such as OurPractice Advisory?",
+            options: [
+              { label: "Yes", next: "communication_epic_action" },
+              { label: "No", next: "patient_pathway_impeded" }
+            ]
+          },
+          communication_epic_action: {
+            id: "communication_epic_action",
+            type: "action",
+            section: "Communication and Awareness",
+            title: "Communication and Awareness",
+            text: "Escalate to the Research Digital Team.",
+            next: "patient_pathway_impeded"
+          },
+
+          // Patient Pathway: related screens and their branching routes.
+          patient_pathway_impeded: {
+            id: "patient_pathway_impeded",
+            type: "question",
+            section: "Patient Pathway",
+            title: "Patient Pathway",
+            text: "Is the study being impeded by the patient pathway?",
+            options: [
+              { label: "Yes", next: "patient_pathway_involved_groups" },
+              { label: "No", next: "share_contacted_sites" }
+            ]
+          },
+          patient_pathway_involved_groups: {
+            id: "patient_pathway_involved_groups",
+            type: "question",
+            section: "Patient Pathway",
+            title: "Patient Pathway",
+            text: "Have you involved participants, PPIE, the public and/or patient groups in trying to understand why the study is failing?",
+            options: [
+              { label: "Yes", next: "patient_pathway_new_ideas" },
+              { label: "No", next: "patient_pathway_involve_action" }
+            ]
+          },
+          patient_pathway_involve_action: {
+            id: "patient_pathway_involve_action",
+            type: "action",
+            section: "Patient Pathway",
+            title: "Patient Pathway",
+            text: "Discuss with Team Lead, Principal Investigator and/or relevant clinical team how patients can be involved to explore the issues.",
+            next: "patient_pathway_new_ideas"
+          },
+          patient_pathway_new_ideas: {
+            id: "patient_pathway_new_ideas",
+            type: "question",
+            section: "Patient Pathway",
+            title: "Patient Pathway",
+            text: "Have you incorporated new ideas into improving study delivery?",
+            options: [
+              { label: "Yes", next: "share_contacted_sites" },
+              { label: "No", next: "patient_pathway_implement_ideas" }
+            ]
+          },
+          patient_pathway_implement_ideas: {
+            id: "patient_pathway_implement_ideas",
+            type: "action",
+            section: "Patient Pathway",
+            title: "Patient Pathway",
+            text: "Either implement the new ideas or discuss with Team Lead and Principal Investigator how to overcome any barriers.",
+            next: "share_contacted_sites"
+          },
+
+          // Share and Learn: related screens and their branching routes.
+          share_contacted_sites: {
+            id: "share_contacted_sites",
+            type: "question",
+            section: "Share and Learn",
+            title: "Share and Learn",
+            text: "Have you contacted other participating sites to discuss their experiences of finding possible solutions to stumbling blocks?",
+            options: [
+              { label: "Yes", next: "share_learning_helpful" },
+              { label: "No", next: "share_contact_sites_action" }
+            ]
+          },
+          share_contact_sites_action: {
+            id: "share_contact_sites_action",
+            type: "action",
+            section: "Share and Learn",
+            title: "Share and Learn",
+            text: "Identify a successful participating site using the study Sponsor and local research delivery network as needed, then approach them for sharing and learning.",
+            next: "share_learning_helpful"
+          },
+          share_learning_helpful: {
+            id: "share_learning_helpful",
+            type: "question",
+            section: "Share and Learn",
+            title: "Share and Learn",
+            text: "Can the learning you have obtained from others help to improve delivery of this study?",
+            options: [
+              { label: "Yes", next: "share_apply_learning" },
+              { label: "No", next: "share_discuss_further" }
+            ]
+          },
+          share_apply_learning: {
+            id: "share_apply_learning",
+            type: "action",
+            section: "Share and Learn",
+            title: "Share and Learn",
+            text: "Apply the learning.",
+            next: "completion_summary"
+          },
+          share_discuss_further: {
+            id: "share_discuss_further",
+            type: "action",
+            section: "Share and Learn",
+            title: "Share and Learn",
+            text: "Discuss with Team Lead, Sponsor, Principal Investigator and/or RRDN.",
+            next: "completion_summary"
+          },
+
+          // Completion Summary: related screens and their branching routes.
+          completion_summary: {
+            id: "completion_summary",
+            type: "summary",
+            section: "Completion Summary",
+            title: "Completion Summary",
+            text: "Congratulations. You have completed all sections in this toolkit. If there are any areas not covered within the toolkit, please escalate to your Team Lead."
+          }
+        }
+      };
+    </script>
+    <script>
+      // Keep journey state and rendering helpers scoped to this application.
+      (function () {
+        var data = window.toolkitData || {};
+        var nodes = data.nodes || {};
+        var orderedSections = data.sections || [];
+
+        // Journey data lives in memory for this tab; history contains snapshots for Back.
+        var state = {
+          currentNodeId: "welcome",
+          history: [],
+          answers: {},
+          log: [],
+          outcome: "in_progress",
+          sidebarOpen: false
+        };
+
+        // Cache the static page controls used when rendering and opening the sidebar.
+        var appRoot = document.getElementById("app");
+        var historyList = document.getElementById("history-list");
+        var summaryStatus = document.getElementById("summary-status");
+        var summaryCount = document.getElementById("summary-count");
+        var homeButton = document.getElementById("home-button");
+        var historyToggleButton = document.getElementById("history-toggle-button");
+        var closeSidebarButton = document.getElementById("close-sidebar-button");
+        var sidebarBackdrop = document.getElementById("sidebar-backdrop");
+
+        function getNode(nodeId) {
+          return nodes[nodeId];
+        }
+
+        function clone(value) {
+          return JSON.parse(JSON.stringify(value));
+        }
+
+        // Use the configured section order to describe progress through the toolkit.
+        function getProgressLabel(sectionName) {
+          var index = orderedSections.indexOf(sectionName);
+
+          if (index === -1) {
+            return sectionName;
+          }
+
+          return "Section " + (index + 1) + " of " + orderedSections.length;
+        }
+
+        // Translate the journey outcome into text shared by the sidebar and exports.
+        function getOutcomeLabel() {
+          if (state.outcome === "early_exit") {
+            return "This journey ended early because escalation or further action was required.";
+          }
+
+          if (state.outcome === "on_track") {
+            return "This journey finished at the on-track check.";
+          }
+
+          if (state.outcome === "completed") {
+            return "This journey completed all toolkit sections.";
+          }
+
+          return "Toolkit in progress.";
+        }
+
+        // Save independent copies of journey data so Back can restore the previous screen.
+        function captureSnapshot() {
+          return {
+            currentNodeId: state.currentNodeId,
+            answers: clone(state.answers),
+            log: clone(state.log),
+            outcome: state.outcome
+          };
+        }
+
+        function restoreSnapshot(snapshot) {
+          state.currentNodeId = snapshot.currentNodeId;
+          state.answers = clone(snapshot.answers);
+          state.log = clone(snapshot.log);
+          state.outcome = snapshot.outcome;
+        }
+
+        // Attach a recommended action when an answer leads directly to an action or exit.
+        function getNextNodeSummary(nextId) {
+          var nextNode = getNode(nextId);
+
+          if (!nextNode) {
+            return {
+              resultingNodeId: nextId,
+              resultingAction: ""
+            };
+          }
+
+          return {
+            resultingNodeId: nextNode.id,
+            resultingAction:
+              nextNode.type === "action" || nextNode.type === "exit" ? nextNode.text : ""
+          };
+        }
+
+        // Record the answer and its next step for the timeline, completion report, and exports.
+        function recordAnswer(node, option) {
+          var nextSummary = getNextNodeSummary(option.next);
+
+          state.answers[node.id] = option.label;
+          state.log.push({
+            stepNumber: state.log.length + 1,
+            section: node.section,
+            question: node.text,
+            answer: option.label,
+            action: nextSummary.resultingAction,
+            resultingNodeId: nextSummary.resultingNodeId
+          });
+        }
+
+        // Keep early exits and on-track results when entering the completion summary.
+        function updateOutcomeFromNode(nextNode) {
+          if (!nextNode) {
+            return;
+          }
+
+          if (nextNode.type === "exit") {
+            state.outcome = nextNode.outcome || "early_exit";
+            return;
+          }
+
+          if (nextNode.id === "completion_summary" && state.outcome === "in_progress") {
+            state.outcome = "completed";
+          }
+        }
+
+        // Synchronize home/mobile layout, dialog semantics, and background interaction.
+        function syncShellState() {
+          var currentNode = getNode(state.currentNodeId);
+          var isHomeScreen = !!(currentNode && currentNode.layout === "home");
+
+          document.body.setAttribute("data-sidebar-open", state.sidebarOpen ? "true" : "false");
+          document.body.setAttribute("data-home-screen", isHomeScreen ? "true" : "false");
+          historyToggleButton.setAttribute("aria-expanded", state.sidebarOpen ? "true" : "false");
+          sidebarBackdrop.hidden = !state.sidebarOpen;
+          var panel = document.getElementById("summary-panel");
+          var isMobile = window.matchMedia("(max-width: 920px)").matches;
+          var modal = isMobile && state.sidebarOpen;
+          panel.setAttribute("role", modal ? "dialog" : "complementary");
+          if (modal) {
+            panel.setAttribute("aria-modal", "true");
+          } else {
+            panel.removeAttribute("aria-modal");
+          }
+          appRoot.inert = modal;
+          homeButton.inert = modal;
+        }
+
+        function syncScrollState() {
+          document.body.setAttribute("data-scrolled", window.scrollY > 12 ? "true" : "false");
+        }
+
+        // Open the path summary and move keyboard focus to its close control.
+        function openSidebar() {
+          state.sidebarOpen = true;
+          syncShellState();
+          closeSidebarButton.focus();
+        }
+
+        // Close the path summary and return focus to its toggle if it was open.
+        function closeSidebar() {
+          var wasOpen = state.sidebarOpen;
+          state.sidebarOpen = false;
+          syncShellState();
+          if (wasOpen) {
+            historyToggleButton.focus();
+          }
+        }
+
+        // Save the current journey before applying an answer and rendering the next node.
+        function navigate(nextId, onNavigate) {
+          var nextNode = getNode(nextId);
+
+          if (!nextNode) {
+            return;
+          }
+
+          state.history.push(captureSnapshot());
+
+          if (typeof onNavigate === "function") {
+            onNavigate(nextNode);
+          }
+
+          updateOutcomeFromNode(nextNode);
+          state.currentNodeId = nextId;
+          closeSidebar();
+          render();
+        }
+
+        // Restore the last saved journey, including its answers, log, and outcome.
+        function goBack() {
+          if (!state.history.length) {
+            return;
+          }
+
+          restoreSnapshot(state.history.pop());
+          closeSidebar();
+          render();
+        }
+
+        // Confirm before clearing recorded answers, then return to the welcome screen.
+        function restart() {
+          if (
+            state.log.length &&
+            !window.confirm(
+              "Start a new review? Your current answers will be cleared. Download your progress first if you need a copy."
+            )
+          ) {
+            return;
+          }
+          state.currentNodeId = "welcome";
+          state.history = [];
+          state.answers = {};
+          state.log = [];
+          state.outcome = "in_progress";
+          closeSidebar();
+          render();
+        }
+
+        // Build the plain-text journey report used by clipboard export.
+        function buildSummaryText() {
+          var node = getNode(state.currentNodeId);
+          var lines = [
+            "Back on Track Toolkit summary",
+            "",
+            "Outcome: " + getOutcomeLabel(),
+            "Current screen: " + (node ? node.title : "Unknown"),
+            "Questions answered: " + state.log.length
+          ];
+          var sectionsVisited = [];
+          var actions = [];
+
+          state.log.forEach(function (entry) {
+            if (sectionsVisited.indexOf(entry.section) === -1) {
+              sectionsVisited.push(entry.section);
+            }
+
+            if (entry.action) {
+              actions.push("- " + entry.action);
+            }
+          });
+
+          lines.push("");
+          lines.push("Sections visited: " + (sectionsVisited.join(", ") || "None"));
+          lines.push("");
+          lines.push("Journey");
+
+          if (!state.log.length) {
+            lines.push("No questions answered yet.");
+          }
+
+          state.log.forEach(function (entry) {
+            lines.push("");
+            lines.push(entry.stepNumber + ". [" + entry.section + "] " + entry.question);
+            lines.push("   Answer: " + entry.answer);
+
+            if (entry.action) {
+              lines.push("   Recommended action: " + entry.action);
+            }
+
+            lines.push("   Next step: " + entry.resultingNodeId);
+          });
+
+          if (actions.length) {
+            lines.push("");
+            lines.push("Recommended actions");
+            Array.prototype.push.apply(lines, actions);
+          }
+
+          return lines.join("\n");
+        }
+
+        function updateCopyButtonLabel(label) {
+          document.getElementById("copy-status").textContent = label === "Copied"
+            ? "Summary copied to clipboard."
+            : label;
+        }
+
+        // Copy the report with the Clipboard API, falling back to a temporary textarea.
+        function copySummary() {
+          var summaryText = buildSummaryText();
+
+          function fallbackCopy() {
+            var textarea = document.createElement("textarea");
+            textarea.value = summaryText;
+            textarea.setAttribute("readonly", "readonly");
+            textarea.style.position = "absolute";
+            textarea.style.left = "-9999px";
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+              if (document.execCommand("copy")) {
+                updateCopyButtonLabel("Copied");
+              } else {
+                updateCopyButtonLabel("Copy unavailable. Download a CSV instead.");
+              }
+            } catch (error) {
+              window.alert("Unable to copy the summary to the clipboard.");
+            }
+
+            document.body.removeChild(textarea);
+          }
+
+          if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+            fallbackCopy();
+            return;
+          }
+
+          navigator.clipboard
+            .writeText(summaryText)
+            .then(function () {
+              updateCopyButtonLabel("Copied");
+            })
+            .catch(function () {
+              fallbackCopy();
+            });
+        }
+
+        // Map recorded answers to the column names used by the CSV download.
+        function buildExportRows() {
+          return state.log.map(function (entry, index) {
+            return {
+              step_number: index + 1,
+              section: entry.section,
+              question: entry.question,
+              answer: entry.answer,
+              recommended_action: entry.action,
+              resulting_node: entry.resultingNodeId,
+              outcome: state.outcome
+            };
+          });
+        }
+
+        // Quote CSV fields containing commas, quotes, or line breaks, and double quotes inside.
+        function escapeCsvValue(value) {
+          var stringValue = String(value == null ? "" : value);
+
+          if (/[",\n]/.test(stringValue)) {
+            return '"' + stringValue.replace(/"/g, '""') + '"';
+          }
+
+          return stringValue;
+        }
+
+        // Create a CSV download and release its temporary object URL afterward.
+        function downloadCsv() {
+          var rows = buildExportRows();
+          var headers = [
+            "step_number",
+            "section",
+            "question",
+            "answer",
+            "recommended_action",
+            "resulting_node",
+            "outcome"
+          ];
+          var csvLines = [headers.join(",")];
+
+          if (!rows.length) {
+            csvLines.push(
+              ["", "", "No questions answered yet", "", "", state.currentNodeId, state.outcome]
+                .map(escapeCsvValue)
+                .join(",")
+            );
+          } else {
+            rows.forEach(function (row) {
+              csvLines.push(
+                headers.map(function (header) {
+                  return escapeCsvValue(row[header]);
+                }).join(",")
+              );
+            });
+          }
+
+          var blob = new Blob([csvLines.join("\n")], {
+            type: "text/csv;charset=utf-8;"
+          });
+          var link = document.createElement("a");
+          var url = window.URL.createObjectURL(blob);
+
+          link.href = url;
+          link.download = "back-on-track-toolkit-summary.csv";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        }
+
+        // Create a shared button with its label, enabled state, appearance, and click handler.
+        function createButton(config) {
+          var button = document.createElement("button");
+          button.type = "button";
+          button.className = config.secondary
+            ? "button button-secondary"
+            : "button";
+          button.textContent = config.label;
+          button.disabled = !!config.disabled;
+          button.addEventListener("click", config.onClick);
+          return button;
+        }
+
+        // Render answer choices and record the selected answer during navigation.
+        function renderQuestion(node, container) {
+          var optionGrid = document.createElement("div");
+          optionGrid.className = "option-grid";
+
+          node.options.forEach(function (option) {
+            optionGrid.appendChild(
+              createButton({
+                label: option.label,
+                onClick: function () {
+                  navigate(option.next, function () {
+                    recordAnswer(node, option);
+                  });
+                }
+              })
+            );
+          });
+
+          container.appendChild(optionGrid);
+        }
+
+        // Render the continue control for introduction, action, and exit screens.
+        function renderActionLikeNode(node, container) {
+          var actions = document.createElement("div");
+          actions.className = "option-grid";
+
+          actions.appendChild(
+            createButton({
+              label: node.nextLabel || "Continue",
+              onClick: function () {
+                if (node.type === "exit") {
+                  state.outcome = node.outcome || "early_exit";
+                }
+
+                navigate(node.next);
+              }
+            })
+          );
+
+          container.appendChild(actions);
+        }
+
+        function createSummaryBlock(title, items, emptyMessage) {
+          var block = document.createElement("section");
+          block.className = "summary-block";
+          var heading = document.createElement("h3");
+          heading.textContent = title;
+          block.appendChild(heading);
+
+          var list = document.createElement("ul");
+          list.className = "summary-screen-list";
+
+          (items.length ? items : [emptyMessage]).forEach(function (item) {
+            var li = document.createElement("li");
+            li.textContent = item;
+            list.appendChild(li);
+          });
+
+          block.appendChild(list);
+          return block;
+        }
+
+        // Build the completion report from sections, questions, and actions in the journey log.
+        function renderSummaryNode(node, container) {
+          var summaryScreen = document.createElement("div");
+          summaryScreen.className = "summary-screen";
+
+          var banner = document.createElement("section");
+          banner.className = "summary-outcome-banner";
+          banner.innerHTML =
+            "<p class=\"eyebrow\">Completion report</p><p>" +
+            getOutcomeLabel() +
+            "</p>";
+          summaryScreen.appendChild(banner);
+
+          var text = document.createElement("p");
+          text.className = "summary-screen-copy";
+          text.textContent = node.text;
+          summaryScreen.appendChild(text);
+
+          var uniqueSections = [];
+          var questionItems = [];
+          var actionItems = [];
+
+          state.log.forEach(function (entry) {
+            if (uniqueSections.indexOf(entry.section) === -1) {
+              uniqueSections.push(entry.section);
+            }
+
+            questionItems.push(entry.question + " Answer: " + entry.answer);
+
+            if (entry.action) {
+              actionItems.push(entry.action);
+            }
+          });
+
+          var summaryGrid = document.createElement("div");
+          summaryGrid.className = "summary-grid";
+          summaryGrid.appendChild(
+            createSummaryBlock("Sections visited", uniqueSections, "No sections visited.")
+          );
+          summaryGrid.appendChild(
+            createSummaryBlock("Questions answered", questionItems, "No questions answered.")
+          );
+          summaryGrid.appendChild(
+            createSummaryBlock(
+              "Actions recommended",
+              actionItems,
+              "No specific actions were triggered in this pathway."
+            )
+          );
+
+          summaryScreen.appendChild(summaryGrid);
+          container.appendChild(summaryScreen);
+        }
+
+        // Show the home attribution or the review navigation and completion export actions.
+        function renderFooter(node, container) {
+          if (node.layout === "home") {
+            var homeFooter = document.createElement("div");
+            homeFooter.className = "footer-actions footer-actions-home";
+
+            var homeFooterCopy = document.createElement("p");
+            homeFooterCopy.className = "home-footer";
+
+            homeFooterCopy.appendChild(document.createTextNode("Developed by the "));
+
+            var homeFooterLink = document.createElement("a");
+            homeFooterLink.className = "home-footer-link";
+            homeFooterLink.href = "https://www.royaldevon.nhs.uk/about-us/research-and-development/";
+            homeFooterLink.target = "_blank";
+            homeFooterLink.rel = "noreferrer";
+            homeFooterLink.textContent = "RDUHT R&D Department";
+            homeFooterCopy.appendChild(homeFooterLink);
+
+            homeFooterCopy.appendChild(
+              document.createTextNode(". " + new Date().getFullYear())
+            );
+
+            homeFooter.appendChild(homeFooterCopy);
+            container.appendChild(homeFooter);
+            return;
+          }
+
+          var footer = document.createElement("div");
+          footer.className = "footer-actions";
+
+          footer.appendChild(
+            createButton({
+              label: "Start over",
+              secondary: true,
+              onClick: restart
+            })
+          );
+
+          if (state.history.length) {
+            var backButton = createButton({ label: "Back", secondary: true, onClick: goBack });
+            footer.insertBefore(backButton, footer.firstChild);
+          }
+
+          if (node.type === "summary") {
+            footer.appendChild(
+              createButton({
+                label: "Copy summary",
+                onClick: copySummary
+              })
+            );
+            footer.appendChild(
+              createButton({
+                label: "Download CSV",
+                secondary: true,
+                onClick: downloadCsv
+              })
+            );
+          }
+
+          container.appendChild(footer);
+        }
+
+        // Rebuild the path timeline and its current status from the recorded answers.
+        function renderHistoryPanel() {
+          historyList.innerHTML = "";
+          summaryCount.textContent = String(state.log.length);
+
+          if (!state.log.length) {
+            var empty = document.createElement("li");
+            empty.className = "empty-history";
+            empty.textContent = "No answers recorded yet.";
+            historyList.appendChild(empty);
+            summaryStatus.textContent = "Toolkit in progress.";
+            return;
+          }
+
+          state.log.forEach(function (entry) {
+            var item = document.createElement("li");
+            var step = document.createElement("span");
+            step.className = "timeline-step";
+            step.textContent = "Step " + entry.stepNumber;
+
+            var question = document.createElement("span");
+            question.className = "timeline-question";
+            question.textContent = "[" + entry.section + "] " + entry.question;
+
+            var answer = document.createElement("span");
+            answer.className = "timeline-answer";
+            answer.textContent = "Answer: " + entry.answer;
+
+            item.appendChild(step);
+            item.appendChild(question);
+            item.appendChild(answer);
+
+            if (entry.action) {
+              var action = document.createElement("span");
+              action.className = "timeline-action";
+              action.textContent = "Recommended action: " + entry.action;
+              item.appendChild(action);
+            }
+
+            historyList.appendChild(item);
+          });
+
+          summaryStatus.textContent = getOutcomeLabel();
+        }
+
+        // Render the current node, refresh the sidebar, and focus the new screen heading.
+        function render() {
+          var node = getNode(state.currentNodeId);
+
+          if (!node) {
+            return;
+          }
+
+          appRoot.innerHTML = "";
+
+          var shell = document.createElement("div");
+          shell.className = "screen-shell";
+
+          if (node.layout !== "home") {
+            var meta = document.createElement("div");
+            meta.className = "screen-meta";
+            var progressLabel = getProgressLabel(node.section);
+
+            if (progressLabel !== node.section && node.type !== "summary") {
+              var progress = document.createElement("span");
+              progress.className = "meta-pill";
+              progress.textContent = progressLabel;
+              meta.appendChild(progress);
+            }
+
+            var section = document.createElement("span");
+            section.className = "meta-pill";
+            section.textContent = node.type === "summary" ? "Review complete" : node.section;
+            meta.appendChild(section);
+
+            shell.appendChild(meta);
+          }
+
+          var screenCard = document.createElement("section");
+          screenCard.className = "screen-card";
+
+          var title = document.createElement("p");
+          title.className = "screen-title";
+          title.textContent = node.title;
+
+          if (node.type !== "summary") {
+            screenCard.appendChild(title);
+          }
+
+          var screenMain = document.createElement("div");
+          screenMain.className = "screen-main";
+
+          var contentStack = document.createElement("div");
+          contentStack.className = "screen-content-stack";
+
+          if (node.type === "summary") {
+            var summaryLead = document.createElement("div");
+            summaryLead.className = "summary-panel-block";
+            var summaryQuestion = document.createElement("h2");
+            summaryQuestion.className = "screen-question";
+            summaryQuestion.textContent = "Your toolkit journey is complete.";
+            summaryLead.appendChild(summaryQuestion);
+            contentStack.appendChild(summaryLead);
+          } else if (node.layout === "home") {
+            var homePanel = document.createElement("div");
+            homePanel.className = "home-panel";
+
+            var homeIntro = document.createElement("div");
+            homeIntro.className = "home-intro";
+
+            var homeQuestion = document.createElement("h1");
+            homeQuestion.className = "screen-question";
+            homeQuestion.textContent = "Get recruitment back on track.";
+            homeIntro.appendChild(homeQuestion);
+
+            var homeDescription = document.createElement("p");
+            homeDescription.className = "home-description";
+            homeDescription.textContent = node.text;
+            homeIntro.appendChild(homeDescription);
+
+            if (node.helperText) {
+              var homeHelper = document.createElement("p");
+              homeHelper.className = "screen-helper";
+              homeHelper.textContent = node.helperText;
+              homeIntro.appendChild(homeHelper);
+            }
+
+            var homeNote = document.createElement("p");
+            homeNote.className = "screen-note";
+            homeNote.textContent = "Review the barriers, identify actions, and take away a clear summary.";
+            homeIntro.appendChild(homeNote);
+            renderActionLikeNode({
+              next: "start_question",
+              nextLabel: "Start review"
+            }, homeIntro);
+
+            var homeHint = document.createElement("p");
+            homeHint.className = "home-hint";
+            homeHint.textContent = "No sign-in needed · Works offline";
+            homeIntro.appendChild(homeHint);
+
+            homePanel.appendChild(homeIntro);
+
+            if (Array.isArray(node.faqs) && node.faqs.length > 0) {
+              var faqPanel = document.createElement("section");
+              faqPanel.className = "home-faq-panel";
+              faqPanel.setAttribute("aria-labelledby", "home-faq-title");
+
+              var faqTitle = document.createElement("h3");
+              faqTitle.className = "home-faq-title";
+              faqTitle.id = "home-faq-title";
+              faqTitle.textContent = "Frequently asked questions";
+              faqPanel.appendChild(faqTitle);
+
+              var faqList = document.createElement("div");
+              faqList.className = "home-faq-list";
+
+              node.faqs.forEach(function (item, index) {
+                var faqItem = document.createElement("details");
+                faqItem.className = "home-faq-item";
+
+                var faqSummary = document.createElement("summary");
+                faqSummary.textContent = item.question;
+                faqItem.appendChild(faqSummary);
+
+                var faqAnswer = document.createElement("p");
+                faqAnswer.className = "home-faq-answer";
+                faqAnswer.textContent = item.answer;
+                faqItem.appendChild(faqAnswer);
+
+                faqList.appendChild(faqItem);
+              });
+
+              faqPanel.appendChild(faqList);
+              homePanel.appendChild(faqPanel);
+            }
+
+            contentStack.appendChild(homePanel);
+          } else {
+            var isRecommendation = node.type === "action" || node.type === "exit";
+            var isPositiveExit = node.type === "exit" && node.outcome === "on_track";
+            var contentPanel = document.createElement("div");
+            if (isPositiveExit) {
+              contentPanel.className = "recommendation-panel success-panel";
+            } else {
+              contentPanel.className = isRecommendation
+                ? "recommendation-panel"
+                : "question-panel";
+            }
+
+            var contentTag = document.createElement("span");
+            if (isPositiveExit) {
+              contentTag.className = "content-tag success-tag";
+              contentTag.textContent = "On track";
+            } else {
+              contentTag.className = isRecommendation
+                ? "content-tag recommendation-tag"
+                : "content-tag question-tag";
+              contentTag.textContent = isRecommendation ? "Recommendation" : "Question";
+            }
+            contentPanel.appendChild(contentTag);
+
+            var question = document.createElement("h2");
+            question.className = "screen-question";
+            question.textContent = node.text;
+            contentPanel.appendChild(question);
+
+            if (node.helperText) {
+              var helper = document.createElement("p");
+              helper.className = "screen-helper";
+              helper.textContent = node.helperText;
+              contentPanel.appendChild(helper);
+            }
+
+            if (node.type === "section_start") {
+              var startNote = document.createElement("p");
+              startNote.className = "screen-note";
+              startNote.textContent = "Start with the first check, then move through the toolkit one screen at a time.";
+              contentPanel.appendChild(startNote);
+            }
+
+            if (node.type === "action") {
+              var note = document.createElement("p");
+              note.className = "screen-note";
+              note.textContent = "Review the action above, then continue when you are ready.";
+              contentPanel.appendChild(note);
+            }
+
+            if (node.type === "exit") {
+              var exitNote = document.createElement("p");
+              exitNote.className = "screen-note";
+              exitNote.textContent = isPositiveExit
+                ? "This pathway shows the study is currently on track."
+                : "This pathway needs escalation or a managed next step before the toolkit can continue.";
+              contentPanel.appendChild(exitNote);
+            }
+
+            contentStack.appendChild(contentPanel);
+          }
+
+          screenMain.appendChild(contentStack);
+          screenCard.appendChild(screenMain);
+
+          if (node.type === "question") {
+            renderQuestion(node, screenCard);
+          } else if (node.type === "summary") {
+            renderSummaryNode(node, screenCard);
+          } else if (node.layout !== "home") {
+            renderActionLikeNode(node, screenCard);
+          }
+
+          renderFooter(node, screenCard);
+          shell.appendChild(screenCard);
+          appRoot.appendChild(shell);
+          renderHistoryPanel();
+          syncShellState();
+          document.getElementById("copy-progress").disabled = !state.log.length;
+          document.getElementById("download-progress").disabled = !state.log.length;
+          document.getElementById("copy-status").textContent = "";
+          var heading = appRoot.querySelector(".screen-question");
+          if (heading) {
+            heading.setAttribute("tabindex", "-1");
+            heading.focus({ preventScroll: true });
+          }
+          window.scrollTo({ top: 0, behavior: "instant" });
+        }
+
+        // Wire export controls and keyboard handling for the mobile dialog focus loop.
+        document.getElementById("copy-progress").addEventListener("click", copySummary);
+        document.getElementById("download-progress").addEventListener("click", downloadCsv);
+        document.addEventListener("keydown", function (event) {
+          if (state.sidebarOpen && window.matchMedia("(max-width: 920px)").matches) {
+            if (event.key === "Escape") {
+              closeSidebar();
+              historyToggleButton.focus();
+            } else if (event.key === "Tab") {
+              var panel = document.getElementById("summary-panel");
+              var controls = panel.querySelectorAll("button:not(:disabled), a[href]");
+              var first = controls[0];
+              var last = controls[controls.length - 1];
+              if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+              } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+              }
+            }
+          }
+        });
+
+        historyToggleButton.addEventListener("click", function () {
+          if (state.sidebarOpen) {
+            closeSidebar();
+            return;
+          }
+
+          openSidebar();
+        });
+        homeButton.addEventListener("click", restart);
+        closeSidebarButton.addEventListener("click", closeSidebar);
+        sidebarBackdrop.addEventListener("click", closeSidebar);
+        window.addEventListener("scroll", syncScrollState, { passive: true });
+        window.addEventListener("resize", syncShellState);
+
+        // Draw the initial welcome screen and synchronize the sticky header appearance.
+        render();
+        syncScrollState();
+      })();
+    </script>
+  </body>
+</html>
