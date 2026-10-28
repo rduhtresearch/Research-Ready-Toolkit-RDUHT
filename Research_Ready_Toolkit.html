@@ -4,6 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Back on Track Toolkit</title>
+    <script>
+      // Apply the preferred theme before the page paints; storage is optional.
+      (function () {
+        var preference;
+        try { preference = localStorage.getItem("back-on-track-theme"); } catch (error) {}
+        var dark = preference === "dark" || (preference !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      })();
+    </script>
     <style>
       /* A working document: one reading column, a quiet path record, shared controls. */
       :root {
@@ -19,8 +28,30 @@
         --accent-soft: #edf3ee;
         --warning: #7a3d16;
         --warning-bg: #fff5ec;
+        --button-text: #ffffff;
+        --selection: #d7e7db;
+        --backdrop: rgba(20, 35, 26, 0.3);
         --max-width: 1120px;
         --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #151b17;
+        --surface: #1a211c;
+        --surface-muted: #232b25;
+        --border: #3b463e;
+        --border-strong: #748479;
+        --text: #e7ece9;
+        --text-muted: #b2bdb5;
+        --accent: #a4c7ae;
+        --accent-strong: #c1ddca;
+        --accent-soft: #203b2b;
+        --warning: #f0c38f;
+        --warning-bg: #35291c;
+        --button-text: #102619;
+        --selection: #35543f;
+        --backdrop: rgba(0, 0, 0, 0.55);
       }
 
       *, *::before, *::after { box-sizing: border-box; }
@@ -33,7 +64,7 @@
         font-size: 1rem;
         line-height: 1.6;
       }
-      ::selection { background: #d7e7db; color: var(--text); }
+      ::selection { background: var(--selection); color: var(--text); }
       button, input, textarea, select { font: inherit; accent-color: var(--accent); caret-color: var(--accent); }
       button, a, summary { -webkit-tap-highlight-color: transparent; }
       a { color: var(--accent); text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
@@ -47,11 +78,17 @@
       .masthead { background: var(--surface); border-bottom: 1px solid var(--border); }
       .masthead-bar { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
       .masthead h1 { margin: 0; font-size: 1.125rem; font-weight: 600; line-height: 1.35; letter-spacing: -0.015em; }
-      .masthead-actions { display: flex; align-items: center; gap: 1rem; }
+      .masthead-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+      .theme-toggle { position: relative; display: inline-flex; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: pointer; }
+      .theme-toggle::before { content: ""; position: absolute; top: 10px; left: 2px; width: 40px; height: 24px; border: 1px solid var(--border-strong); border-radius: 24px; background: var(--surface-muted); transition: background-color 120ms ease-out, border-color 120ms ease-out; }
+      .theme-toggle::after { content: ""; position: absolute; top: 14px; left: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--text-muted); transition: transform 120ms ease-out; }
+      .theme-toggle[aria-checked="true"]::before { border-color: var(--accent); background: var(--accent); }
+      .theme-toggle[aria-checked="true"]::after { transform: translateX(16px); background: var(--button-text); }
+      .theme-toggle:hover::before { border-color: var(--accent); }
       .home-link-button { display: inline-flex; gap: 0.5rem; align-items: center; justify-content: center; min-height: 44px; padding: 0 0.25rem; border: 0; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.875rem; }
       .home-link-button:hover { color: var(--accent); }
       .home-link-button svg { width: 18px; height: 18px; }
-      body[data-home-screen="true"] .masthead-actions { display: none; }
+      body[data-home-screen="true"] #home-button, body[data-home-screen="true"] #history-toggle-button { display: none; }
 
       /* Flat content and path columns; no enclosing cards or decorative panels. */
       .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 280px; align-items: start; gap: 3rem; margin-top: 2.5rem; }
@@ -82,7 +119,7 @@
         border: 1px solid var(--accent);
         border-radius: 4px;
         background: var(--accent);
-        color: #ffffff;
+        color: var(--button-text);
         font-size: 0.9375rem;
         font-weight: 600;
         line-height: 1.4;
@@ -97,8 +134,8 @@
       .option-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.75rem; }
       .option-grid .button { min-width: 120px; }
       .footer-actions { display: flex; flex-wrap: wrap; gap: 1rem; border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 2.5rem; }
-      .footer-actions .button { min-width: 44px; padding: 0.5rem 0; border-color: transparent; background: transparent; color: var(--text-muted); font-size: 0.875rem; }
-      .footer-actions .button:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 0.2em; }
+      .footer-actions .button { min-width: 44px; padding: 0.5rem 0; border: 0; border-radius: 0; background: transparent; color: var(--text-muted); font-size: 0.875rem; }
+      .footer-actions .button:hover:not(:disabled) { border-color: transparent; background: transparent; color: var(--accent); text-decoration: underline; text-underline-offset: 0.2em; }
       .footer-actions .button:last-child { margin-left: auto; }
 
       /* A compact answer record, separated by rules rather than stacked cards. */
@@ -156,7 +193,7 @@
       .summary-details { border-top: 1px solid var(--border); }
       .summary-details > summary { min-height: 48px; padding: 0.875rem 0; font-size: 0.9375rem; cursor: pointer; }
       .summary-details .summary-block { margin-top: 0.5rem; }
-      .sidebar-backdrop { position: fixed; inset: 0; z-index: 19; border: 0; background: rgba(20, 35, 26, 0.3); }
+      .sidebar-backdrop { position: fixed; inset: 0; z-index: 19; border: 0; background: var(--backdrop); }
 
       @media (min-width: 921px) {
         #history-toggle-button, #close-sidebar-button, .sidebar-backdrop { display: none !important; }
@@ -173,7 +210,7 @@
         .page-shell { width: calc(100% - 2.5rem); padding-bottom: 2rem; }
         .masthead-bar { min-height: 76px; flex-wrap: wrap; gap: 0.25rem 1rem; padding: 1rem 0; }
         .masthead h1 { font-size: 1.0625rem; }
-        .masthead-actions { gap: 1rem; }
+        .masthead-actions { gap: 0.5rem; }
         .workspace, body[data-home-screen="true"] .workspace { margin-top: 2rem; }
         .screen-question { font-size: 1.75rem; }
         .recommendation-panel { padding: 1.125rem; }
@@ -197,6 +234,7 @@
           </div>
 
           <div class="masthead-actions">
+            <button id="theme-toggle" class="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Dark mode" title="Switch to dark theme"></button>
             <button
               id="home-button"
               class="home-link-button"
@@ -1368,6 +1406,7 @@
           }
           appRoot.inert = modal;
           homeButton.inert = modal;
+          document.querySelector(".theme-toggle").inert = modal;
         }
 
         function syncScrollState() {
@@ -2093,6 +2132,33 @@
           if (!storageAvailable && state.currentNodeId !== "welcome") {
             event.preventDefault();
             event.returnValue = "";
+          }
+        });
+
+        // Theme choice is independent of review state and survives navigation/reload.
+        var themeToggle = document.getElementById("theme-toggle");
+        var manualThemeChosen = false;
+        var systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+        function syncThemeControl() {
+          var dark = document.documentElement.getAttribute("data-theme") === "dark";
+          var label = dark ? "Switch to light theme" : "Switch to dark theme";
+          themeToggle.setAttribute("aria-checked", dark ? "true" : "false");
+          themeToggle.title = label;
+        }
+        syncThemeControl();
+        themeToggle.addEventListener("click", function () {
+          manualThemeChosen = true;
+          var theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", theme);
+          syncThemeControl();
+          try { localStorage.setItem("back-on-track-theme", theme); } catch (error) {}
+        });
+        systemTheme.addEventListener("change", function (event) {
+          var preference;
+          try { preference = localStorage.getItem("back-on-track-theme"); } catch (error) {}
+          if (!manualThemeChosen && preference !== "dark" && preference !== "light") {
+            document.documentElement.setAttribute("data-theme", event.matches ? "dark" : "light");
+            syncThemeControl();
           }
         });
 
