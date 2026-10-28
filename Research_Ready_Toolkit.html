@@ -413,13 +413,13 @@
           },
           on_track: {
             id: "on_track",
-            type: "exit",
+            type: "action",
             section: "Start",
-            title: "Study on track",
-            text: "Great news, the study is on track. You can still use this tool to help keep the study on track while you continue to monitor study performance.",
-            next: "completion_summary",
-            nextLabel: "Finish",
-            outcome: "on_track"
+            title: "Keeping recruitment on track",
+            instructional: true,
+            text: "You’ve indicated that the study is meeting recruitment milestones. You can still use the toolkit to review recruitment arrangements and identify potential barriers early.",
+            next: "intro_missing",
+            nextLabel: "Continue to toolkit"
           },
           intro_missing: {
             id: "intro_missing",
@@ -427,7 +427,7 @@
             section: "Start",
             title: "Toolkit overview",
             instructional: true,
-            text: "Work through the sections to identify barriers affecting recruitment. You can review the recommended actions at the end.",
+            text: "Work through the sections to identify current or potential barriers to recruitment. You can review the recommended actions at the end.",
             next: "monitoring_tools"
           },
 
@@ -1946,7 +1946,7 @@
 
             var expectations = document.createElement("p");
             expectations.className = "home-description review-expectations";
-            expectations.textContent = "Review up to 12 areas of study delivery, one question at a time. Some pathways end earlier with a recommended next step. Have your recruitment figures and screening log ready.";
+            expectations.textContent = "Review up to 12 areas of study delivery, one question at a time. Some pathways end earlier with a recommended next step.";
             homeIntro.appendChild(expectations);
             if (pendingDraft) {
               var resumeActions = document.createElement("div");
